@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star } from "lucide-react"
-import { featuredHotels } from "@/components/data/hotels"
+import { roomsDummyData, hotelDummyData } from "@/app/assets/assets"
 
 export function FeaturedHotels() {
   return (
@@ -16,27 +16,34 @@ export function FeaturedHotels() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredHotels.map((hotel, index) => (
-            <Card key={index} className="overflow-hidden">
+          {roomsDummyData.map((room) => (
+            <Card key={room._id} className="overflow-hidden">
               <div className="relative h-48">
-                <Image src={hotel.image || "/placeholder.svg"} alt={hotel.name} fill className="object-cover" />
-                <Badge className="absolute top-2 left-2 bg-white text-black">{hotel.tag}</Badge>
+                <Image 
+                  src={room.images[0]} 
+                  alt={room.roomType} 
+                  fill 
+                  className="object-cover" 
+                />
+                <Badge className="absolute top-2 left-2 bg-white text-black">
+                  {room.roomType}
+                </Badge>
               </div>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold">{hotel.name}</h3>
-                    <p className="text-sm text-muted-foreground">{hotel.features} features</p>
+                    <h3 className="font-semibold">{hotelDummyData.name}</h3>
+                    <p className="text-sm text-muted-foreground">{room.amenities.length} amenities</p>
                   </div>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 fill-amber-500 text-amber-500 mr-1" />
-                    <span className="font-medium">{hotel.rating}</span>
+                    <span className="font-medium">4.8</span>
                   </div>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 flex justify-between items-center">
                 <div>
-                  <span className="font-bold">${hotel.price}</span>
+                  <span className="font-bold">${room.pricePerNight}</span>
                   <span className="text-sm text-muted-foreground"> /night</span>
                 </div>
                 <Button variant="outline" size="sm">

@@ -1,41 +1,88 @@
+'use client'
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { assets } from "@/app/assets/assets"
+import { useState, useEffect } from "react"
 
 export function Header() {
-  return (
-    <header className="absolute top-0 left-0 right-0 z-50">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex items-center bg-white rounded-md p-1">
-            <Image src="/placeholder.svg?height=24&width=24" alt="QuickStay Logo" width={24} height={24} />
-            <span className="font-bold text-lg ml-1">QuickStay</span>
-          </div>
-        </Link>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-sm font-medium text-white hover:text-white/80">
-            Home
-          </Link>
-          <Link href="/hotels" className="text-sm font-medium text-white hover:text-white/80">
-            Hotels
-          </Link>
-          <Link href="/experiences" className="text-sm font-medium text-white hover:text-white/80">
-            Experiences
-          </Link>
-          <Link href="/about" className="text-sm font-medium text-white hover:text-white/80">
-            About
-          </Link>
+    const navLinks = [
+        { name: 'Home', path: '/' },
+        { name: 'Hotels', path: '/hotels' },
+        { name: 'Experiences', path: '/experiences' },
+        { name: 'About', path: '/about' },
+    ];
+
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return (
+        <nav className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2">
+                <Image src={assets.logo} alt="QuickStay Logo" className={`h-9 ${isScrolled && "invert opacity-80"}`} />
+            </Link>
+
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-4 lg:gap-8">
+                {navLinks.map((link, i) => (
+                    <Link key={i} href={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                        {link.name}
+                        <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
+                    </Link>
+                ))}
+                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}>
+                    New Launch
+                </button>
+            </div>
+
+            {/* Desktop Right */}
+            <div className="hidden md:flex items-center gap-4">
+                <Image src={assets.searchIcon} alt="Search" className={`h-6 w-6 ${isScrolled ? "invert" : ""}`} />
+                <Button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
+                    Login
+                </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center gap-3 md:hidden">
+                <Image 
+                    src={isMenuOpen ? assets.closeMenu : assets.menuIcon} 
+                    alt="Menu" 
+                    className={`h-6 w-6 cursor-pointer ${isScrolled ? "invert" : ""}`}
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                />
+            </div>
+
+            {/* Mobile Menu */}
+            <div className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+                <button className="absolute top-4 right-4" onClick={() => setIsMenuOpen(false)}>
+                    <Image src={assets.closeIcon} alt="Close" className="h-6 w-6" />
+                </button>
+
+                {navLinks.map((link, i) => (
+                    <Link key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
+                        {link.name}
+                    </Link>
+                ))}
+
+                <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
+                    New Launch
+                </button>
+
+                <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+                    Login
+                </Button>
+            </div>
         </nav>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-white">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-            Login
-          </Button>
-        </div>
-      </div>
-    </header>
-  )
+    );
 } 

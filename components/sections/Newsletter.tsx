@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { userDummyData } from "@/app/assets/assets"
 
 export function Newsletter() {
   return (
@@ -14,6 +15,7 @@ export function Newsletter() {
             type="email"
             placeholder="Enter your email"
             className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+            defaultValue={userDummyData.email}
           />
           <Button>Subscribe</Button>
         </div>
