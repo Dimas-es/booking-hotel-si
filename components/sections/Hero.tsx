@@ -15,17 +15,27 @@ function formatDate(date: Date | undefined) {
 }
 
 export function Hero() {
-  const [destination, setDestination] = useState<string>(cities[0]);
+  const [destination, setDestination] = useState<string>("");
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
   const [checkOut, setCheckOut] = useState<Date | undefined>(undefined);
-  const [guests, setGuests] = useState<number>(2);
+  const [guests, setGuests] = useState<string>("");
   const [openCheckIn, setOpenCheckIn] = useState(false);
   const [openCheckOut, setOpenCheckOut] = useState(false);
+  const [focus, setFocus] = useState<{[key:string]: boolean}>({});
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Simulasi search, bisa diganti dengan router push atau lainnya
-    console.log({ destination, checkIn, checkOut, guests });
+    const guestsNumber = guests ? Number(guests) : undefined;
+    console.log({ destination, checkIn, checkOut, guests: guestsNumber });
+  };
+
+  // Helper for floating label
+  const isActive = (field: string) => {
+    if (field === 'destination') return focus.destination || !!destination;
+    if (field === 'checkIn') return focus.checkIn || !!checkIn;
+    if (field === 'checkOut') return focus.checkOut || !!checkOut;
+    if (field === 'guests') return focus.guests || !!guests;
+    return false;
   };
 
   return (
@@ -48,34 +58,44 @@ export function Hero() {
             Experience luxury and comfort at some of the world's finest hotels and resorts. Find your perfect stay.
           </p>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg px-4 py-3 flex flex-col md:flex-row items-center gap-2 max-w-4xl mx-auto shadow">
-            {/* Destination */}
-            <div className="flex flex-col flex-1 min-w-[120px]">
-              <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                <Image src={assets.locationIcon} alt="Location" width={18} height={18} />
-                <span>Destination</span>
-              </div>
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg px-4 py-3 flex flex-col md:flex-row items-center gap-4 max-w-4xl mx-auto shadow">
+            {/* Destination Floating Label */}
+            <div className="relative flex flex-col justify-end flex-1 min-w-[120px] pb-1 border-b border-gray-200">
               <select
                 id="destinationInput"
-                className="appearance-none bg-transparent font-bold text-black text-base outline-none border-0 p-0 cursor-pointer"
+                className="peer appearance-none bg-transparent text-base font-medium text-gray-900 outline-none border-0 w-full h-12 pt-5 pr-6 cursor-pointer"
                 value={destination}
                 onChange={e => setDestination(e.target.value)}
+                onFocus={() => setFocus(f => ({...f, destination: true}))}
+                onBlur={() => setFocus(f => ({...f, destination: false}))}
+                required
+                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
               >
+                <option value="" disabled hidden></option>
                 {cities.map((city) => (
                   <option key={city} value={city} className="text-black">{city}</option>
                 ))}
               </select>
+              <span className={`pointer-events-none absolute left-3 transition-all duration-200 flex items-center gap-1
+                ${isActive('destination') ? 'text-xs top-2 -translate-y-0 scale-90 rotate-[-6deg]' : 'text-base top-1/2 -translate-y-1/2'}
+                text-gray-500 font-normal
+              `}>
+                <Image src={assets.locationIcon} alt="Location" width={16} height={16} />
+                <span>Destination</span>
+              </span>
             </div>
 
-            {/* Check in */}
-            <div className="flex flex-col flex-1 min-w-[120px]">
-              <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                <Image src={assets.calenderIcon} alt="Calendar" width={18} height={18} />
-                <span>Check in</span>
-              </div>
+            {/* Check in Floating Label */}
+            <div className="relative flex flex-col justify-end flex-1 min-w-[120px] pb-1 border-b border-gray-200">
               <Popover open={openCheckIn} onOpenChange={setOpenCheckIn}>
                 <PopoverTrigger asChild>
-                  <button type="button" className="bg-transparent font-bold text-black text-base outline-none border-0 p-0 cursor-pointer text-left w-full" onClick={() => setOpenCheckIn(true)}>
+                  <button
+                    type="button"
+                    className="peer bg-transparent text-base font-medium text-gray-900 outline-none border-0 w-full h-12 pt-5 text-left pr-6"
+                    onClick={() => setOpenCheckIn(true)}
+                    onFocus={() => setFocus(f => ({...f, checkIn: true}))}
+                    onBlur={() => setFocus(f => ({...f, checkIn: false}))}
+                  >
                     {checkIn ? formatDate(checkIn) : ""}
                   </button>
                 </PopoverTrigger>
@@ -83,17 +103,26 @@ export function Hero() {
                   <Calendar mode="single" selected={checkIn} onSelect={(date: Date | undefined) => { setCheckIn(date); setOpenCheckIn(false); }} initialFocus />
                 </PopoverContent>
               </Popover>
+              <span className={`pointer-events-none absolute left-3 transition-all duration-200 flex items-center gap-1
+                ${isActive('checkIn') ? 'text-xs top-2 -translate-y-0 scale-90 rotate-[-6deg]' : 'text-base top-1/2 -translate-y-1/2'}
+                text-gray-500 font-normal
+              `}>
+                <Image src={assets.calenderIcon} alt="Calendar" width={16} height={16} />
+                <span>Check in</span>
+              </span>
             </div>
 
-            {/* Check out */}
-            <div className="flex flex-col flex-1 min-w-[120px]">
-              <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                <Image src={assets.calenderIcon} alt="Calendar" width={18} height={18} />
-                <span>Check out</span>
-              </div>
+            {/* Check out Floating Label */}
+            <div className="relative flex flex-col justify-end flex-1 min-w-[120px] pb-1 border-b border-gray-200">
               <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
                 <PopoverTrigger asChild>
-                  <button type="button" className="bg-transparent font-bold text-black text-base outline-none border-0 p-0 cursor-pointer text-left w-full" onClick={() => setOpenCheckOut(true)}>
+                  <button
+                    type="button"
+                    className="peer bg-transparent text-base font-medium text-gray-900 outline-none border-0 w-full h-12 pt-5 text-left pr-6"
+                    onClick={() => setOpenCheckOut(true)}
+                    onFocus={() => setFocus(f => ({...f, checkOut: true}))}
+                    onBlur={() => setFocus(f => ({...f, checkOut: false}))}
+                  >
                     {checkOut ? formatDate(checkOut) : ""}
                   </button>
                 </PopoverTrigger>
@@ -101,22 +130,35 @@ export function Hero() {
                   <Calendar mode="single" selected={checkOut} onSelect={(date: Date | undefined) => { setCheckOut(date); setOpenCheckOut(false); }} initialFocus />
                 </PopoverContent>
               </Popover>
+              <span className={`pointer-events-none absolute left-3 transition-all duration-200 flex items-center gap-1
+                ${isActive('checkOut') ? 'text-xs top-2 -translate-y-0 scale-90 rotate-[-6deg]' : 'text-base top-1/2 -translate-y-1/2'}
+                text-gray-500 font-normal
+              `}>
+                <Image src={assets.calenderIcon} alt="Calendar" width={16} height={16} />
+                <span>Check out</span>
+              </span>
             </div>
 
-            {/* Guests */}
-            <div className="flex flex-col flex-1 min-w-[80px]">
-              <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                <span>Guests</span>
-              </div>
+            {/* Guests Floating Label */}
+            <div className="relative flex flex-col justify-end flex-1 min-w-[80px] pb-1 border-b border-gray-200">
               <input
                 type="number"
                 id="guests"
                 min={1}
                 max={4}
                 value={guests}
-                onChange={e => setGuests(Number(e.target.value))}
-                className="bg-transparent font-bold text-black text-base outline-none border-0 p-0 max-w-16 text-left"
+                onChange={e => setGuests(e.target.value)}
+                onFocus={() => setFocus(f => ({...f, guests: true}))}
+                onBlur={() => setFocus(f => ({...f, guests: false}))}
+                className="peer bg-transparent text-base font-medium text-gray-900 outline-none border-0 max-w-16 text-left w-full h-12 pt-5 pr-6"
+                required
               />
+              <span className={`pointer-events-none absolute left-3 transition-all duration-200 flex items-center gap-1
+                ${isActive('guests') ? 'text-xs top-2 -translate-y-0 scale-90 rotate-[-6deg]' : 'text-base top-1/2 -translate-y-1/2'}
+                text-gray-500 font-normal
+              `}>
+                <span>Guests</span>
+              </span>
             </div>
 
             {/* Search Button */}
