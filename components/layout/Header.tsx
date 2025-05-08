@@ -5,8 +5,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { assets } from "@/app/assets/assets"
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 export function Header() {
+    const pathname = usePathname();
+    const isHomePage = pathname === '/';
+    
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Hotels', path: '/hotels' },
@@ -25,29 +29,33 @@ export function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    const textColorClass = isHomePage 
+        ? (isScrolled ? "text-gray-700" : "text-white")
+        : "text-gray-700";
+
     return (
         <nav className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
-                <Image src={assets.logo} alt="QuickStay Logo" className={`h-9 ${isScrolled && "invert opacity-80"}`} />
+                <Image src={assets.logo} alt="QuickStay Logo" className={`h-9 ${isScrolled || !isHomePage ? "invert opacity-80" : ""}`} />
             </Link>
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-4 lg:gap-8">
                 {navLinks.map((link, i) => (
-                    <Link key={i} href={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                    <Link key={i} href={link.path} className={`group flex flex-col gap-0.5 ${textColorClass}`}>
                         {link.name}
-                        <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
+                        <div className={`${isScrolled || !isHomePage ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
                     </Link>
                 ))}
-                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}>
+                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${textColorClass} transition-all`}>
                     New Launch
                 </button>
             </div>
 
             {/* Desktop Right */}
             <div className="hidden md:flex items-center gap-4">
-                <Image src={assets.searchIcon} alt="Search" className={`h-6 w-6 ${isScrolled ? "invert" : ""}`} />
+                <Image src={assets.searchIcon} alt="Search" className={`h-6 w-6 ${isScrolled || !isHomePage ? "invert" : ""}`} />
                 <Button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
                     Login
                 </Button>
@@ -58,7 +66,7 @@ export function Header() {
                 <Image 
                     src={isMenuOpen ? assets.closeMenu : assets.menuIcon} 
                     alt="Menu" 
-                    className={`h-6 w-6 cursor-pointer ${isScrolled ? "invert" : ""}`}
+                    className={`h-6 w-6 cursor-pointer ${isScrolled || !isHomePage ? "invert" : ""}`}
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                 />
             </div>

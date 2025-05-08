@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -46,9 +47,11 @@ export function FeaturedHotels() {
                   <span className="font-bold">${room.pricePerNight}</span>
                   <span className="text-sm text-muted-foreground"> /night</span>
                 </div>
-                <Button variant="outline" size="sm">
-                  View Details
-                </Button>
+                <Link href={`/details/${room._id}`}>
+                  <Button variant="outline" size="sm">
+                    View Details
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
