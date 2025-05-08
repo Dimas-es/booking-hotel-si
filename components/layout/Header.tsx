@@ -40,15 +40,11 @@ export function Header() {
                         <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
                     </Link>
                 ))}
-                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}>
-                    New Launch
-                </button>
             </div>
 
             {/* Desktop Right */}
             <div className="hidden md:flex items-center gap-4">
-                <Image src={assets.searchIcon} alt="Search" className={`h-6 w-6 ${isScrolled ? "invert" : ""}`} />
-                <Button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
+                <Button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500 cursor-pointer">
                     Login
                 </Button>
             </div>
@@ -74,10 +70,6 @@ export function Header() {
                         {link.name}
                     </Link>
                 ))}
-
-                <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
-                    New Launch
-                </button>
 
                 <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
                     Login

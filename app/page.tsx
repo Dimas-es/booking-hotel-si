@@ -4,7 +4,7 @@ import { Hero } from "@/components/sections/Hero"
 import { FeaturedHotels } from "@/components/sections/FeaturedHotels"
 import { ExclusiveOffers } from "@/components/sections/ExclusiveOffers"
 import { Testimonials } from "@/components/sections/Testimonials"
-import { Newsletter } from "@/components/sections/Newsletter"
+import { CTA } from "@/components/sections/CTA"
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
       <FeaturedHotels />
       <ExclusiveOffers />
       <Testimonials />
-      <Newsletter />
+      <CTA />
       <Footer />
     </div>
   )

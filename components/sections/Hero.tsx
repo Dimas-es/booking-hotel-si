@@ -1,8 +1,6 @@
 'use client'
 import Image from "next/image"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -52,7 +50,7 @@ export function Hero() {
         <div className="max-w-4xl">
           <Badge className="mb-4 bg-white/20 text-white hover:bg-white/30">The Ultimate Hotel Experience</Badge>
           <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Discover Your Perfect <br /> Getaway Destination
+            Discover Your Perfect <br /> Gateway Destination
           </h1>
           <p className="mb-8 max-w-xl text-lg text-white/90">
             Experience luxury and comfort at some of the world's finest hotels and resorts. Find your perfect stay.
