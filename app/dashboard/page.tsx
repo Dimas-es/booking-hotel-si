@@ -10,7 +10,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
         <div>
           <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
-          <p className="text-gray-500">Welcome back to QuickStay Admin</p>
+          <p className="text-gray-500 dark:text-gray-400">Welcome back to QuickStay Admin</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Export Data</Button>
@@ -20,14 +20,14 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-6 dark:bg-neutral-900">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Bookings</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
                 <p className="text-3xl font-bold mt-1">1,249</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+12.5%</Badge>
-                  <span className="text-xs text-gray-500">from last month</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center">
@@ -37,14 +37,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-6 dark:bg-neutral-900">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</p>
                 <p className="text-3xl font-bold mt-1">$348,520</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+8.2%</Badge>
-                  <span className="text-xs text-gray-500">from last month</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-green-100 flex items-center justify-center">
@@ -68,14 +68,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-6 dark:bg-neutral-900">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Users</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
                 <p className="text-3xl font-bold mt-1">8,492</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+5.3%</Badge>
-                  <span className="text-xs text-gray-500">from last month</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-purple-100 flex items-center justify-center">
@@ -85,14 +85,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-6 dark:bg-neutral-900">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Properties</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Properties</p>
                 <p className="text-3xl font-bold mt-1">542</p>
                 <div className="flex items-center gap-1 mt-1">
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+3.1%</Badge>
-                  <span className="text-xs text-gray-500">from last month</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
                 </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-orange-100 flex items-center justify-center">
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-4">
               {recentBookings.map((booking, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50">
+                <div key={index} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800">
                   <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
                     <Image
                       src={booking.image || "/placeholder.svg"}
@@ -125,11 +125,11 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm">{booking.hotel}</h3>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                       <MapPin className="h-3 w-3 flex-shrink-0 mr-1" />
                       <span className="truncate">{booking.location}</span>
                     </div>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                       <span>{booking.dates}</span>
                       <span className="mx-1">•</span>
                       <span>{booking.guests} guests</span>
@@ -165,13 +165,13 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-4">
               {topHotels.map((hotel, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
+                <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800">
                   <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
                     <Image src={hotel.image || "/placeholder.svg"} alt={hotel.name} fill className="object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm">{hotel.name}</h3>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                       <div className="flex mr-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold">${hotel.price}</p>
-                    <p className="text-xs text-gray-500">per night</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">per night</p>
                   </div>
                 </div>
               ))}
