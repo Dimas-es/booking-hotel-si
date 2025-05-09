@@ -12,10 +12,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold mb-1">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400">Welcome back to QuickStay Admin</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Export Data</Button>
-          <Button>Add New Property</Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -198,6 +194,7 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
 const recentBookings = [
   {
     hotel: "The Grand Resort",

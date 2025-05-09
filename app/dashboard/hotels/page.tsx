@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin, Plus, Search, Star } from "lucide-react"
 
 export default function HotelsPage() {
@@ -15,7 +14,6 @@ export default function HotelsPage() {
           <p className="text-gray-500">Manage all hotel properties</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">Export CSV</Button>
           <Button className="gap-1">
             <Plus className="h-4 w-4" /> Add New Hotel
           </Button>
@@ -27,49 +25,6 @@ export default function HotelsPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <Input placeholder="Search hotels..." className="pl-9" />
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <div className="w-full md:w-1/2">
-            <Select defaultValue="all">
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="w-full md:w-1/2">
-            <Select defaultValue="all">
-              <SelectTrigger>
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="los-angeles">Los Angeles</SelectItem>
-                <SelectItem value="new-york">New York</SelectItem>
-                <SelectItem value="miami">Miami</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="flex gap-3 lg:justify-end">
-          <div className="w-full md:w-1/2 lg:w-auto">
-            <Select defaultValue="newest">
-              <SelectTrigger>
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="rating">Rating</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </div>
@@ -122,12 +77,6 @@ export default function HotelsPage() {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      <div className="flex justify-center mt-6">
-        <Button variant="outline" className="gap-1">
-          Load More
-        </Button>
       </div>
     </div>
   )

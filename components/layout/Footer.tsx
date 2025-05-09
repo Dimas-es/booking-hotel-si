@@ -16,12 +16,13 @@ export function Footer() {
               />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-[400px]">
-              Discover the world's most extraordinary places to stay, from
-              boutique hotels to luxury villas and more.
+              Discover unbeatable deals and exclusive hotel packages designed for
+              every kind of traveler. Secure your dream room now and make every
+              trip unforgettable.
             </p>
             <div className="flex gap-4">
               <Link
-                href="#"
+                href="https://www.facebook.com/" target="_blank"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <svg
@@ -39,7 +40,7 @@ export function Footer() {
                 </svg>
               </Link>
               <Link
-                href="#"
+                href="https://www.x.com/" target="_blank"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <svg
@@ -57,7 +58,7 @@ export function Footer() {
                 </svg>
               </Link>
               <Link
-                href="#"
+                href="https://www.instagram.com/" target="_blank"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <svg

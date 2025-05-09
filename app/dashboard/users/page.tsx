@@ -16,7 +16,6 @@ export default function UsersPage() {
           <p className="text-gray-500">Manage user accounts and permissions</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">Export CSV</Button>
           <Button className="gap-1">
             <Plus className="h-4 w-4" /> Add New User
           </Button>
@@ -133,27 +132,6 @@ export default function UsersPage() {
                 ))}
               </TableBody>
             </Table>
-          </div>
-
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">Showing 1-6 of 124 users</div>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="bg-blue-50">
-                1
-              </Button>
-              <Button variant="outline" size="sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm">
-                3
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>

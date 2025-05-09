@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "@/components/ui/table"
-import { SearchIcon } from "lucide-react"
+import { SearchIcon, Plus } from "lucide-react"
 
 export default function BookingsPage() {
   return (
@@ -16,8 +16,9 @@ export default function BookingsPage() {
           <p className="text-gray-500">View and manage all reservations</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">Export CSV</Button>
-          <Button>New Booking</Button>
+          <Button className="gap-1">
+            <Plus className="h-4 w-4" /> Add New Booking
+          </Button>
         </div>
       </div>
 
@@ -136,27 +137,6 @@ export default function BookingsPage() {
                 ))}
               </TableBody>
             </Table>
-          </div>
-
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-gray-500">Showing 1-10 of 56 bookings</div>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" className="bg-blue-50">
-                1
-              </Button>
-              <Button variant="outline" size="sm">
-                2
-              </Button>
-              <Button variant="outline" size="sm">
-                3
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>

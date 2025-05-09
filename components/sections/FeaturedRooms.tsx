@@ -3,17 +3,16 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star } from "lucide-react"
+import { Star, ChevronRight } from "lucide-react"
 import { roomsDummyData, hotelDummyData } from "@/app/assets/assets"
 
-export function FeaturedHotels() {
+export function FeaturedRooms() {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-4">Featured Hotels</h2>
+        <h2 className="text-3xl font-bold text-center mb-4">Featured Rooms</h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Discover our handpicked collection of exceptional properties around
-          the world, offering unparalleled luxury and unforgettable experiences.
+          Discover our exclusive selection of rooms, each designed to provide the ultimate comfort and luxury for your stay.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -60,8 +59,8 @@ export function FeaturedHotels() {
         </div>
 
         <div className="flex justify-center mt-10">
-          <Link href="/list-hotels">
-            <Button className="cursor-pointer" variant="outline">View All Hotels</Button>
+          <Link href="/list-rooms" className="text-sm font-medium flex items-center hover:underline">
+            View All Rooms <ChevronRight className="h-4 w-4 ml-1" />
           </Link>
         </div>
       </div>

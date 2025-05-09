@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -11,7 +13,7 @@ export function Header() {
     
     const navLinks = [
         { name: 'Home', path: '/' },
-        { name: 'Hotels', path: '/hotels' },
+        { name: 'Rooms', path: '/list-rooms' },
         { name: 'Experiences', path: '/experiences' },
         { name: 'About', path: '/about' },
     ];

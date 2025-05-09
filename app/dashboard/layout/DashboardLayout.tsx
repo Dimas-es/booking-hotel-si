@@ -1,12 +1,32 @@
-"use client"
+"use client";
 
-import React from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from "@/components/ui/sidebar"
-import { BarChart3, BellIcon, CreditCard, HotelIcon, LayoutDashboard, LogOut, Settings, Users } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ModeToggle } from "@/components/mode-toggle"
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+} from "@/components/ui/sidebar";
+import {
+  BellIcon,
+  CreditCard,
+  HotelIcon,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+} from "lucide-react";
+import { ModeToggle } from "@/components/mode-toggle";
+import { assets } from "@/app/assets/assets";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +35,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="flex w-full h-full">
           <AdminSidebar />
           <div className="flex-1 flex flex-col h-full w-full">
-            <header className="border-b bg-white dark:bg-neutral-900 w-full" style={{ flex: '0 0 auto' }}>
+            <header
+              className="border-b bg-white dark:bg-neutral-900 w-full"
+              style={{ flex: "0 0 auto" }}
+            >
               <div className="flex items-center justify-between px-6 h-16 w-full">
                 <h1 className="text-xl font-bold">Admin Dashboard</h1>
                 <div className="flex items-center gap-4">
@@ -26,39 +49,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       3
                     </span>
                   </button>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Admin User" />
-                      <AvatarFallback>AU</AvatarFallback>
-                    </Avatar>
-                    <div className="hidden md:block">
-                      <p className="text-sm font-medium">Admin User</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">admin@quickstay.com</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </header>
-            <main className="flex-1 overflow-auto bg-gray-50 dark:bg-neutral-950 w-full h-full" style={{ minHeight: 0 }}>
+            <main
+              className="flex-1 overflow-auto bg-gray-50 dark:bg-neutral-950 w-full h-full"
+              style={{ minHeight: 0 }}
+            >
               {children}
             </main>
           </div>
         </div>
       </SidebarProvider>
     </div>
-  )
+  );
 }
 
 function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex items-center">
-            <Image src="/placeholder.svg?height=24&width=24" alt="QuickStay Logo" width={24} height={24} />
-            <span className="font-bold text-lg ml-1">QuickStay</span>
-          </div>
-        </Link>
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center mb-4">
+            <Image
+              src={assets.logo}
+              alt="QuickStay Logo"
+              className="h-9 invert opacity-80"
+            />
+          </Link>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -97,14 +116,6 @@ function AdminSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  {/* <Link href="/dashboard/stats">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Analytics</span>
-                  </Link> */}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -137,5 +148,5 @@ function AdminSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
-} 
+  );
+}
