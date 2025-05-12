@@ -94,9 +94,9 @@ function AdminSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link href="/dashboard/hotels">
+                  <Link href="/dashboard/rooms">
                     <HotelIcon className="h-4 w-4" />
-                    <span>Hotels</span>
+                    <span>Rooms</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
