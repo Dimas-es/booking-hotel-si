@@ -10,11 +10,13 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
+  // Allow NextAuth API routes to be public
+  const isNextAuthRoute = request.nextUrl.pathname.startsWith("/api/auth");
+
   if (!session) {
-    // Redirect if not logged in
     if (
       request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/api")
+      (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
     ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -32,7 +34,7 @@ export async function middleware(request: NextRequest) {
   if (error || profile?.role !== "admin") {
     if (
       request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/api")
+      (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
     ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
