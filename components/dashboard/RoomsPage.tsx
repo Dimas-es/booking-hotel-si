@@ -264,7 +264,7 @@ export default function RoomList() {
           <h2 className="font-semibold">
             {room.room_number} - {room.room_type}
           </h2>
-          <p>Price: ${room.price_per_night}</p>
+          <p>Price: Rp. {room.price_per_night}</p>
           <p>Capacity: {room.capacity}</p>
           <p>Amenities: {room.amenities?.join(" - ")}</p>
           {room.room_images && room.room_images.length > 0 && (
