@@ -4,7 +4,7 @@ import { assets } from "@/app/assets/assets";
 
 export function Footer() {
   return (
-    <footer className="py-16 bg-white border-t">
+    <footer className="pt-16 pb-10 bg-white border-t">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
@@ -170,7 +170,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t mt-6 pt-6 flex justify-center">
+        <div className="mt-10 flex justify-center">
           <p className="text-sm text-muted-foreground">
             © 2025 QuickStay. All rights reserved.
           </p>

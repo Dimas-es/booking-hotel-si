@@ -12,7 +12,7 @@ export function CTA() {
           unforgettable.
         </p>
         <Link
-          href="/list-hotels"
+          href="/list-rooms"
         >
           <Button
             size="lg"

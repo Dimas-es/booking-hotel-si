@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function RoomList() {
   const [rooms, setRooms] = useState<any[]>([]);
@@ -43,7 +45,7 @@ export default function RoomList() {
     formData.append("file", file);
     formData.append(
       "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET as string
     );
     formData.append("folder", "booking-hotel");
 
@@ -71,67 +73,74 @@ export default function RoomList() {
     const { room_number, room_type, price_per_night, capacity, amenities } =
       formData;
 
-    const { data: roomData, error } = await supabase
-      .from("rooms")
-      .insert([
-        {
-          room_number,
-          room_type,
-          price_per_night: parseFloat(price_per_night),
-          capacity: parseInt(capacity),
-          amenities: amenities
-            ? amenities.split(",").map((item) => item.trim())
-            : null,
-        },
-      ])
-      .select()
-      .single();
+    setIsLoading(true);
 
-    if (error) {
-      alert("Gagal menambahkan room: " + error.message);
-      return;
-    }
+    try {
+      const { data: roomData, error } = await supabase
+        .from("rooms")
+        .insert([
+          {
+            room_number,
+            room_type,
+            price_per_night: parseFloat(price_per_night),
+            capacity: parseInt(capacity),
+            amenities: amenities
+              ? amenities.split(",").map((item) => item.trim())
+              : null,
+          },
+        ])
+        .select()
+        .single();
 
-    if (image) {
-      try {
-        const imageUrl = await uploadToCloudinary(image);
-
-        const { error: imageInsertError } = await supabase
-          .from("room_images")
-          .insert([
-            {
-              room_id: roomData.id,
-              image_url: imageUrl,
-              is_primary: true,
-            },
-          ]);
-
-        if (imageInsertError) {
-          console.error(
-            "Gagal menyimpan gambar ke database:",
-            imageInsertError.message
-          );
-          alert(
-            "Gagal menyimpan gambar ke database: " + imageInsertError.message
-          );
-        }
-      } catch (err) {
-        console.error("Error uploading image:", err);
-        alert("Error uploading image: " + err.message);
+      if (error) {
+        alert("Gagal menambahkan room: " + error.message);
+        setIsLoading(false);
+        return;
       }
-    }
 
-    setShowModal(false);
-    setFormData({
-      room_number: "",
-      room_type: "",
-      price_per_night: "",
-      capacity: "",
-      amenities: "",
-    });
-    setImage(null);
-    setImagePreview(null);
-    fetchRooms();
+      if (image) {
+        try {
+          const imageUrl = await uploadToCloudinary(image);
+
+          const { error: imageInsertError } = await supabase
+            .from("room_images")
+            .insert([
+              {
+                room_id: roomData.id,
+                image_url: imageUrl,
+                is_primary: true,
+              },
+            ]);
+
+          if (imageInsertError) {
+            console.error(
+              "Gagal menyimpan gambar ke database:",
+              imageInsertError.message
+            );
+            alert(
+              "Gagal menyimpan gambar ke database: " + imageInsertError.message
+            );
+          }
+        } catch (err: any) {
+          console.error("Error uploading image:", err);
+          alert("Error uploading image: " + err.message);
+        }
+      }
+
+      setShowModal(false);
+      setFormData({
+        room_number: "",
+        room_type: "",
+        price_per_night: "",
+        capacity: "",
+        amenities: "",
+      });
+      setImage(null);
+      setImagePreview(null);
+      fetchRooms();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Fungsi untuk menghandle klik edit
@@ -248,124 +257,164 @@ export default function RoomList() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Room List</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          + Tambah Room
-        </button>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Rooms</h1>
+          <p className="text-gray-500">View and manage all rooms</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setShowModal(true);
+              setEditingRoom(null);
+              setFormData({
+                room_number: "",
+                room_type: "",
+                price_per_night: "",
+                capacity: "",
+                amenities: "",
+              });
+              setImage(null);
+              setImagePreview(null);
+            }}
+            className="gap-1 bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-2"
+          >
+            <Plus className="h-4 w-4" /> Add New Room
+          </Button>
+        </div>
       </div>
 
-      {rooms.map((room) => (
-        <div key={room.id} className="border p-4 mb-4 rounded shadow-sm">
-          <h2 className="font-semibold">
-            {room.room_number} - {room.room_type}
-          </h2>
-          <p>Price: Rp. {room.price_per_night}</p>
-          <p>Capacity: {room.capacity}</p>
-          <p>Amenities: {room.amenities?.join(" - ")}</p>
-          {room.room_images && room.room_images.length > 0 && (
-            <div className="mt-4">
-              <Image
-                src={room.room_images[0].image_url}
-                alt="Room Image"
-                width={160}
-                height={80}
-                className="object-cover rounded"
-              />
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {rooms.map((room) => (
+          <div
+            key={room.id}
+            className="border rounded-xl shadow-lg p-5 bg-white hover:shadow-2xl transition-shadow duration-200 flex flex-col"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              {room.room_images && room.room_images.length > 0 && (
+                <Image
+                  src={room.room_images[0].image_url}
+                  alt="Room Image"
+                  width={120}
+                  height={80}
+                  className="object-cover rounded-lg border"
+                />
+              )}
+              <div className="flex-1">
+                <h2 className="font-bold text-lg flex items-center gap-2">
+                  {room.room_number}
+                  <span className="bg-gray-200 text-xs px-2 py-1 rounded-full">
+                    {room.room_type}
+                  </span>
+                </h2>
+                <div className="text-gray-600 text-sm mt-1">
+                  <span className="font-semibold">Price:</span> Rp. {room.price_per_night}
+                  <span className="mx-2">|</span>
+                  <span className="font-semibold">Capacity:</span> {room.capacity}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {room.amenities?.map((am: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="bg-gray-100 text-xs px-2 py-0.5 rounded-full"
+                    >
+                      {am}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
-          <div className="flex space-x-2 mt-2">
-            <button
-              onClick={() => handleEditClick(room)}
-              className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDelete(room.id)}
-              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Hapus
-            </button>
+            <div className="flex gap-2 mt-auto">
+              <Button
+                onClick={() => handleEditClick(room)}
+                className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1"
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={() => handleDelete(room.id)}
+                className="bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-4 py-1"
+              >
+                Hapus
+              </Button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
+        <div className="fixed inset-0 flex justify-center items-center z-50 transition-all duration-200">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl animate-fadeIn">
+            <h2 className="text-2xl font-bold mb-6 text-center">
               {editingRoom ? "Update Room" : "Add New Room"}
             </h2>
             <form
               onSubmit={editingRoom ? handleUpdate : handleSubmit}
-              className="space-y-4"
+              className="space-y-5"
             >
               <div>
-                <label className="block text-sm font-medium">Room Number</label>
+                <label className="block text-sm font-semibold mb-1">Room Number</label>
                 <input
                   type="text"
                   name="room_number"
                   value={formData.room_number}
                   onChange={handleInputChange}
-                  className="w-full border p-2 rounded-md"
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Room Type</label>
+                <label className="block text-sm font-semibold mb-1">Room Type</label>
                 <input
                   type="text"
                   name="room_type"
                   value={formData.room_type}
                   onChange={handleInputChange}
-                  className="w-full border p-2 rounded-md"
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  Price per Night
-                </label>
-                <input
-                  type="number"
-                  name="price_per_night"
-                  value={formData.price_per_night}
-                  onChange={handleInputChange}
-                  className="w-full border p-2 rounded-md"
-                />
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold mb-1">Price/Night</label>
+                  <input
+                    type="number"
+                    name="price_per_night"
+                    value={formData.price_per_night}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold mb-1">Capacity</label>
+                  <input
+                    type="number"
+                    name="capacity"
+                    value={formData.capacity}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium">Capacity</label>
-                <input
-                  type="number"
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleInputChange}
-                  className="w-full border p-2 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Amenities</label>
+                <label className="block text-sm font-semibold mb-1">Amenities</label>
                 <textarea
                   name="amenities"
                   value={formData.amenities}
                   onChange={handleInputChange}
-                  className="w-full border p-2 rounded-md"
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                  placeholder="Separate with comma, e.g. Wifi, TV, AC"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Room Image</label>
+                <label className="block text-sm font-semibold mb-1">Room Image</label>
                 {imagePreview && (
-                  <div className="mb-2">
+                  <div className="mb-2 flex justify-center">
                     <Image
                       src={imagePreview}
                       alt="Preview"
                       width={128}
                       height={128}
-                      className="object-cover rounded-md"
+                      className="object-cover rounded-lg border"
                     />
                   </div>
                 )}
@@ -373,31 +422,43 @@ export default function RoomList() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full border p-2 rounded-md"
+                  className="w-full border border-gray-300 p-2 rounded-lg"
                 />
               </div>
-              <div className="flex justify-end space-x-2">
-                <button
+              <hr className="my-2" />
+              <div className="flex justify-end gap-2">
+                <Button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg px-4 py-2"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   className={`${
-                    isLoading ? "bg-gray-400" : "bg-blue-600"
-                  } text-white px-4 py-2 rounded`}
+                    isLoading
+                      ? "bg-gray-400"
+                      : "bg-black text-white hover:bg-gray-800"
+                  } text-white px-4 py-2 rounded-lg font-semibold`}
                   disabled={isLoading}
                 >
                   {isLoading ? "Loading..." : "Save"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
         </div>
       )}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px);}
+          to { opacity: 1; transform: translateY(0);}
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease;
+        }
+      `}</style>
     </div>
   );
 }

@@ -21,10 +21,6 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
                 <p className="text-3xl font-bold mt-1">1,249</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+12.5%</Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
-                </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-blue-600" />
@@ -38,10 +34,6 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</p>
                 <p className="text-3xl font-bold mt-1">$348,520</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+8.2%</Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
-                </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-green-100 flex items-center justify-center">
                 <svg
@@ -69,10 +61,6 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
                 <p className="text-3xl font-bold mt-1">8,492</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+5.3%</Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
-                </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-purple-100 flex items-center justify-center">
                 <Users className="h-5 w-5 text-purple-600" />
@@ -84,12 +72,8 @@ export default function DashboardPage() {
           <CardContent className="p-6 dark:bg-neutral-900">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Properties</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Rooms</p>
                 <p className="text-3xl font-bold mt-1">542</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+3.1%</Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">from last month</span>
-                </div>
               </div>
               <div className="h-10 w-10 rounded-md bg-orange-100 flex items-center justify-center">
                 <Hotel className="h-5 w-5 text-orange-600" />
@@ -153,7 +137,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-bold">Top Hotels</CardTitle>
+            <CardTitle className="text-lg font-bold">Top Rooms</CardTitle>
             <Button variant="ghost" size="sm" className="gap-1">
               View All <ArrowUpRight className="h-4 w-4" />
             </Button>
