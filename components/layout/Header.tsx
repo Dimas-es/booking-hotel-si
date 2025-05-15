@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { assets } from "@/app/assets/assets";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { User } from "lucide-react";
 
 export function Header() {
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
@@ -74,16 +77,41 @@ export function Header() {
 
       {/* Desktop Right */}
       <div className="hidden md:flex items-center gap-4">
-        <Link href="/signup">
-          <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
-            Signup
-          </Button>
-        </Link>
-        <Link href="/login">
-          <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
-            Login
-          </Button>
-        </Link>
+        {status === "loading" ? (
+          <div className="w-24 h-9 bg-gray-200 rounded-full animate-pulse" />
+        ) : status === "authenticated" && session?.user ? (
+          <div className="relative group flex items-center gap-2">
+            {session.user.image ? (
+              <Image
+                src={session.user.image}
+                alt={session.user.name || "Profile"}
+                width={36}
+                height={36}
+                className="rounded-full border border-gray-300 cursor-pointer"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer">
+                <User className="text-gray-500 w-6 h-6" />
+              </div>
+            )}
+            <div className="absolute right-0 top-12 bg-white shadow-lg rounded-md py-2 px-4 min-w-[160px] opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-50">
+              <div className="font-semibold mb-2">{session.user.name}</div>
+              <Link href="/my-bookings" className="block py-1 hover:underline">Booking Saya</Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="block w-full text-left py-1 text-red-600 hover:underline"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        ) : (
+          <Link href="/login">
+            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
+              Login
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Mobile Menu Button */}
@@ -117,16 +145,27 @@ export function Header() {
           </Link>
         ))}
 
-        <Link href="/signup">
-          <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
-            Signup
-          </Button>
-        </Link>
-        <Link href="/login">
-          <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
-            Login
-          </Button>
-        </Link>
+        {status === "authenticated" && session?.user ? (
+          <>
+            <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)}>
+              <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
+                Booking Saya
+              </Button>
+            </Link>
+            <button
+              onClick={() => { setIsMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+              className="bg-red-600 text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
+              Login
+            </Button>
+          </Link>
+        )}
       </div>
     </nav>
   );

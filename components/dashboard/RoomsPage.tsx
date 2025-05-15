@@ -43,6 +43,9 @@ export default function RoomList() {
   const uploadToCloudinary = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    if (!process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) {
+      throw new Error("Cloudinary upload preset is not set in environment variables");
+    }
     formData.append(
       "upload_preset",
       process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET as string
@@ -249,10 +252,13 @@ export default function RoomList() {
 
   // Fungsi untuk menghandle perubahan gambar
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImage(null);
+      setImagePreview(null);
     }
   };
 
