@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -25,6 +25,7 @@ type Room = {
 
 export function FeaturedRooms() {
   const [rooms, setRooms] = useState<Room[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -47,18 +48,20 @@ export function FeaturedRooms() {
 
       if (error) {
         console.error("Error fetching rooms:", error)
-      } else {
+      } else if (data) {
         const formattedData = data.map((room: any) => ({
           ...room,
           room_number: String(room.room_number),
           capacity: Number(room.capacity),
           amenities: Array.isArray(room.amenities) ? room.amenities : [],
-          room_images: room.room_images.filter(
-            (img: any) => img.is_primary || room.room_images.length === 1
-          ),
+          room_images: Array.isArray(room.room_images)
+            ? room.room_images.filter((img: any) => img.is_primary || room.room_images.length === 1)
+            : [],
         }))
         setRooms(formattedData)
       }
+
+      setLoading(false)
     }
 
     fetchRooms()
@@ -72,44 +75,48 @@ export function FeaturedRooms() {
           Discover our exclusive selection of rooms, each designed to provide the ultimate comfort and luxury for your stay.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {rooms.map((room) => (
-            <Card key={room.id} className="overflow-hidden">
-              <div className="relative h-48">
-                <Image
-                  src={room.room_images[0]?.image_url ?? "/fallback.jpg"}
-                  alt={room.room_type}
-                  fill
-                  className="object-cover"
-                />
-                <Badge className="absolute top-2 left-2 bg-white text-black">
-                  {room.room_type}
-                </Badge>
-              </div>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">Room {room.room_number}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {room.amenities.length} amenities
-                    </p>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading rooms...</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {rooms.map((room) => (
+              <Card key={room.id} className="overflow-hidden">
+                <div className="relative h-48">
+                  <Image
+                    src={room.room_images[0]?.image_url ?? "/fallback.jpg"}
+                    alt={room.room_type}
+                    fill
+                    className="object-cover"
+                  />
+                  <Badge className="absolute top-2 left-2 bg-white text-black">
+                    {room.room_type}
+                  </Badge>
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">Room {room.room_number}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {room.amenities.length} amenities
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                <div>
-                  <span className="font-bold">Rp. {room.price_per_night}</span>
-                  <span className="text-sm text-muted-foreground"> /night</span>
-                </div>
-                <Link href={`/details/${room.id}`}>
-                  <Button variant="outline" size="sm" className="cursor-pointer">
-                    View Details
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+                <CardFooter className="p-4 pt-0 flex justify-between items-center">
+                  <div>
+                    <span className="font-bold">Rp. {room.price_per_night}</span>
+                    <span className="text-sm text-muted-foreground"> /night</span>
+                  </div>
+                  <Link href={`/details/${room.id}`}>
+                    <Button variant="outline" size="sm" className="cursor-pointer">
+                      View Details
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-center mt-10">
           <Link href="/list-rooms" className="text-sm font-medium flex items-center hover:underline">
