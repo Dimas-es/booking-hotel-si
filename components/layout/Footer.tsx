@@ -4,7 +4,7 @@ import { assets } from "@/app/assets/assets";
 
 export function Footer() {
   return (
-    <footer className="py-12 bg-white border-t">
+    <footer className="py-16 bg-white border-t">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
@@ -80,8 +80,8 @@ export function Footer() {
             </div>
           </div>
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase">Company</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold mb-6 text-sm uppercase tracking-wider">Company</h3>
+            <ul className="space-y-3">
               <li>
                 <Link
                   href="#"
@@ -125,8 +125,8 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase">Support</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold mb-6 text-sm uppercase tracking-wider">Support</h3>
+            <ul className="space-y-3">
               <li>
                 <Link
                   href="#"
