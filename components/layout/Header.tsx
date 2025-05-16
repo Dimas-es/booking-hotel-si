@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { assets } from "@/app/assets/assets";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { User } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 export function Header() {
   const { data: session, status } = useSession();

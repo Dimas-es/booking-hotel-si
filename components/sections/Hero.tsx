@@ -20,7 +20,7 @@ export function Hero() {
             Discover Your Perfect <br /> Gateway Destination
           </h1>
           <p className="mb-8 max-w-xl text-lg text-white/90">
-            Experience luxury and comfort at some of the world's finest hotels and resorts. Find your perfect stay.
+            Experience luxury and comfort at some of the world&#39;s finest hotels and resorts. Find your perfect stay.
           </p>
         </div>
       </div>

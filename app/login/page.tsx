@@ -1,7 +1,6 @@
-"use client"
+"use client";
 
 import type React from "react"
-
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -15,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { signIn } from "next-auth/react"
+import { assets } from "@/app/assets/assets";
 
 export default function AuthPage() {
   const router = useRouter()
@@ -226,8 +226,7 @@ export default function AuthPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex items-center">
-              <Image src="/placeholder.svg?height=24&width=24" alt="QuickStay Logo" width={24} height={24} />
-              <span className="font-bold text-lg ml-1">QuickStay</span>
+              <Image src={assets.logo} alt="QuickStay Logo" className="h-9 invert opacity-80" />
             </div>
           </Link>
         </div>
@@ -235,55 +234,15 @@ export default function AuthPage() {
 
       <main className="flex-1 flex">
         <div className="hidden lg:block lg:w-1/2 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800">
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-black">
             <div className="absolute inset-0 bg-black opacity-30"></div>
           </div>
           <div className="relative h-full flex flex-col justify-center items-center text-white p-12">
             <div className="max-w-md mx-auto text-center">
               <h1 className="text-4xl font-bold mb-6">Welcome to QuickStay</h1>
               <p className="text-lg mb-8">
-                Discover the world's most extraordinary places to stay, from boutique hotels to luxury villas and more.
+                Discover the world&#39;s most extraordinary places to stay, from boutique hotels to luxury villas and more.
               </p>
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <h3 className="font-bold text-xl mb-1">500+</h3>
-                  <p className="text-sm text-white/80">Luxury Hotels</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <h3 className="font-bold text-xl mb-1">100+</h3>
-                  <p className="text-sm text-white/80">Destinations</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                  <h3 className="font-bold text-xl mb-1">10k+</h3>
-                  <p className="text-sm text-white/80">Happy Guests</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4">
-                <div className="flex -space-x-2">
-                  <Image
-                    src="/placeholder.svg?height=40&width=40"
-                    alt="User"
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-white"
-                  />
-                  <Image
-                    src="/placeholder.svg?height=40&width=40"
-                    alt="User"
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-white"
-                  />
-                  <Image
-                    src="/placeholder.svg?height=40&width=40"
-                    alt="User"
-                    width={40}
-                    height={40}
-                    className="rounded-full border-2 border-white"
-                  />
-                </div>
-                <p className="text-sm">Join thousands of satisfied travelers</p>
-              </div>
             </div>
           </div>
         </div>
@@ -356,7 +315,7 @@ export default function AuthPage() {
                         </div>
                         {errors.login.password && <p className="text-red-500 text-xs mt-1">{errors.login.password}</p>}
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 mb-4">
                         <Checkbox
                           id="remember-me"
                           checked={rememberMe}
@@ -371,7 +330,7 @@ export default function AuthPage() {
                       </div>
                     </CardContent>
                     <div className="px-6">
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+                      <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
                         {isLoading ? "Logging in..." : "Login"}
                       </Button>
                     </div>
@@ -387,7 +346,7 @@ export default function AuthPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         onClick={handleGoogleAuth}
                         disabled={isLoading}
                       >
@@ -509,7 +468,7 @@ export default function AuthPage() {
                           <p className="text-red-500 text-xs mt-1">{errors.register.confirmPassword}</p>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 mb-4">
                         <Checkbox id="terms" />
                         <label
                           htmlFor="terms"
@@ -527,7 +486,7 @@ export default function AuthPage() {
                       </div>
                     </CardContent>
                     <div className="px-6">
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+                      <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
                         {isLoading ? "Creating account..." : "Create account"}
                       </Button>
                     </div>
@@ -543,7 +502,7 @@ export default function AuthPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         onClick={handleGoogleAuth}
                         disabled={isLoading}
                       >
