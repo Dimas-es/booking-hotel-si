@@ -17,7 +17,6 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import {
-  BellIcon,
   CreditCard,
   HotelIcon,
   LayoutDashboard,
@@ -43,12 +42,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <h1 className="text-xl font-bold">Admin Dashboard</h1>
                 <div className="flex items-center gap-4">
                   <ModeToggle />
-                  <button className="relative">
-                    <BellIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-medium text-white">
-                      3
-                    </span>
-                  </button>
                 </div>
               </div>
             </header>

@@ -1,48 +1,51 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+// import { NextResponse } from "next/server";
+// import type { NextRequest } from "next/server";
+// import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 
-export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+// export async function middleware(request: NextRequest) {
+//   const res = NextResponse.next();
+//   const supabase = createMiddlewareClient({ req: request, res });
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+//   const {
+//     data: { session },
+//   } = await supabase.auth.getSession();
 
-  // Allow NextAuth API routes to be public
-  const isNextAuthRoute = request.nextUrl.pathname.startsWith("/api/auth");
+//   // Allow NextAuth API routes to be public
+//   const isNextAuthRoute = request.nextUrl.pathname.startsWith("/api/auth");
 
-  if (!session) {
-    if (
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
-    ) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return res;
-  }
+//   if (!session) {
+//     if (
+//       request.nextUrl.pathname.startsWith("/dashboard") ||
+//       (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
+//     ) {
+//       return NextResponse.redirect(new URL("/", request.url));
+//     }
+//     return res;
+//   }
 
-  const userId = session.user.id;
+//   const userId = session.user.id;
 
-  const { data: profile, error } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .single();
+//   const { data: profile, error } = await supabase
+//     .from("users")
+//     .select("role")
+//     .eq("id", userId)
+//     .single();
 
-  if (error || profile?.role !== "admin") {
-    if (
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
-    ) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
+//   if (error || profile?.role !== "admin") {
+//     if (
+//       request.nextUrl.pathname.startsWith("/dashboard") ||
+//       (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
+//     ) {
+//       return NextResponse.redirect(new URL("/", request.url));
+//     }
+//   }
 
-  return res;
-}
+//   return res;
+// }
 
-export const config = {
-  matcher: ["/dashboard/:path*", "/api/:path*"],
-};
+// export const config = {
+//   matcher: ["/dashboard/:path*", "/api/:path*"],
+// };
+
+export const config = {};
+export default function () {}
