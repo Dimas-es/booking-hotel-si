@@ -102,15 +102,14 @@ export async function createBooking({
   if (new Date(check_in_date) >= new Date(check_out_date)) {
     return { success: false, error: "Check-out date must be after check-in date." };
   }
-  // Cek bentrok booking
+  // Cek bentrok booking (pending/confirmed saja)
   const { data: conflicts } = await supabase
     .from("bookings")
     .select("id")
     .eq("room_id", room_id)
-    .or(`
-      and(check_in_date.lte.${check_out_date},check_out_date.gte.${check_in_date})
-    `)
-    .not("status", "eq", "cancelled");
+    .in("status", ["pending", "confirmed"])
+    .lt("check_in_date", check_out_date)
+    .gt("check_out_date", check_in_date);
   if (conflicts && conflicts.length > 0) {
     return { success: false, error: "Room is already booked for the selected dates." };
   }
@@ -190,16 +189,15 @@ export async function editBooking({
   if (bookingError || !bookingData) {
     return { success: false, error: "Booking not found." };
   }
-  // Cek bentrok booking lain (kecuali booking ini sendiri)
+  // Cek bentrok booking lain (kecuali booking ini sendiri, status pending/confirmed)
   const { data: conflicts } = await supabase
     .from("bookings")
     .select("id")
     .eq("room_id", bookingData.room_id)
     .neq("id", booking_id)
-    .or(`
-      and(check_in_date.lte.${check_out_date},check_out_date.gte.${check_in_date})
-    `)
-    .not("status", "eq", "cancelled");
+    .in("status", ["pending", "confirmed"])
+    .lt("check_in_date", check_out_date)
+    .gt("check_out_date", check_in_date);
   if (conflicts && conflicts.length > 0) {
     return { success: false, error: "Room is already booked for the selected dates." };
   }

@@ -144,9 +144,37 @@ export default function BookingsPage() {
     setShowModal(true);
   }
 
+  async function isRoomAvailable(room_id: string, check_in_date: string, check_out_date: string, excludeBookingId: string | null = null) {
+    let query = supabase
+      .from("bookings")
+      .select("id")
+      .eq("room_id", room_id)
+      .in("status", ["pending", "confirmed"])
+      .lt("check_in_date", check_out_date)
+      .gt("check_out_date", check_in_date);
+    if (excludeBookingId) {
+      query = query.neq("id", excludeBookingId);
+    }
+    const { data, error } = await query;
+    return !data || data.length === 0;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+
+    // Cek overlap booking
+    const available = await isRoomAvailable(
+      formData.room_id,
+      formData.check_in_date,
+      formData.check_out_date,
+      editingBooking ? editingBooking.id : null
+    );
+    if (!available) {
+      alert("Room is already booked for the selected dates!");
+      setLoading(false);
+      return;
+    }
 
     if (editingBooking) {
       // Update
