@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/table";
 import { SearchIcon, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type User = {
   id: string;
@@ -46,6 +53,8 @@ export default function UsersPage() {
   });
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -55,12 +64,10 @@ export default function UsersPage() {
     setLoading(true);
     let query = supabase.from("users").select("*").order("created_at", { ascending: false });
 
-    // Filtering
     if (roleFilter !== "all") {
       query = query.eq("role", roleFilter);
     }
 
-    // No status field, so statusFilter is ignored unless you add a status column
     const { data, error } = await query;
     if (!error && data) {
       setUsers(data as User[]);
@@ -68,7 +75,6 @@ export default function UsersPage() {
     setLoading(false);
   }
 
-  // Filtering & searching
   const filteredUsers = users.filter((user) => {
     const matchSearch =
       user.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -144,12 +150,19 @@ export default function UsersPage() {
     setLoading(false);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Yakin hapus user ini?")) return;
+  function handleDelete(id: string) {
+    setShowDeleteModal(true);
+    setDeleteId(id);
+  }
+
+  async function handleDeleteConfirmed() {
+    if (!deleteId) return;
     setLoading(true);
-    const { error } = await supabase.from("users").delete().eq("id", id);
+    const { error } = await supabase.from("users").delete().eq("id", deleteId);
     if (!error) {
       fetchUsers();
+      setShowDeleteModal(false);
+      setDeleteId(null);
     } else {
       alert("Gagal hapus user: " + error.message);
     }
@@ -164,7 +177,7 @@ export default function UsersPage() {
           <p className="text-gray-500">Manage user accounts and permissions</p>
         </div>
         <div className="flex gap-2">
-          <Button className="gap-1" onClick={handleOpenAdd}>
+          <Button className="gap-1 bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1 cursor-pointer" onClick={handleOpenAdd}>
             <Plus className="h-4 w-4" /> Add New User
           </Button>
         </div>
@@ -254,13 +267,13 @@ export default function UsersPage() {
                       <div className="flex justify-end gap-2">
                         <Button
                           onClick={() => handleOpenEdit(user)}
-                          className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1"
+                          className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1 cursor-pointer"
                         >
                           Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(user.id)}
-                          className="bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-4 py-1"
+                          className="bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-4 py-1 cursor-pointer"
                         >
                           Delete
                         </Button>
@@ -281,7 +294,7 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      {/* Modal */}
+      {/* Modal Tambah/Edit User */}
       {showModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 transition-all duration-200">
           <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl animate-fadeIn">
@@ -330,10 +343,15 @@ export default function UsersPage() {
                   variant="outline"
                   onClick={() => setShowModal(false)}
                   disabled={loading}
+                  className="bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg px-4 py-1 cursor-pointer"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1 cursor-pointer"
+                >
                   {loading ? "Saving..." : editingUser ? "Update" : "Create"}
                 </Button>
               </div>
@@ -341,6 +359,44 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Hapus */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Hapus User?</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-center">
+            <div className="mx-auto mb-4 flex items-center justify-center h-14 w-14 rounded-full bg-red-100">
+              <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold mb-2">Apakah Anda yakin ingin menghapus user ini?</p>
+            <p className="text-gray-500 text-sm">Tindakan ini tidak dapat dibatalkan.</p>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg px-4 py-1 cursor-pointer"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={loading}
+              type="button"
+            >
+              Batal
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700 rounded-lg px-4 py-1 cursor-pointer"
+              onClick={handleDeleteConfirmed}
+              disabled={loading}
+              type="button"
+            >
+              {loading ? "Menghapus..." : "Hapus"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px);}

@@ -5,6 +5,13 @@ import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function RoomList() {
   const [rooms, setRooms] = useState<any[]>([]);
@@ -13,6 +20,8 @@ export default function RoomList() {
   const [editingRoom, setEditingRoom] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     room_number: "",
@@ -237,17 +246,25 @@ export default function RoomList() {
     }
   };
 
-  // Fungsi untuk menghapus room
-  const handleDelete = async (roomId: number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus room ini?")) return;
+  // Fungsi untuk menghapus room (dengan popup konfirmasi cantik)
+  const handleDelete = (roomId: number) => {
+    setShowDeleteModal(true);
+    setDeleteId(roomId);
+  };
 
-    const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+  const handleDeleteConfirmed = async () => {
+    if (!deleteId) return;
+    setIsLoading(true);
+    const { error } = await supabase.from("rooms").delete().eq("id", deleteId);
     if (error) {
       alert("Gagal menghapus room: " + error.message);
+      setIsLoading(false);
       return;
     }
-
+    setShowDeleteModal(false);
+    setDeleteId(null);
     fetchRooms();
+    setIsLoading(false);
   };
 
   // Fungsi untuk menghandle perubahan gambar
@@ -284,7 +301,7 @@ export default function RoomList() {
               setImage(null);
               setImagePreview(null);
             }}
-            className="gap-1 bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-2"
+            className="gap-1 bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-2 cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Add New Room
           </Button>
@@ -334,13 +351,13 @@ export default function RoomList() {
             <div className="flex gap-2 mt-auto">
               <Button
                 onClick={() => handleEditClick(room)}
-                className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1"
+                className="bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1 cursor-pointer"
               >
                 Edit
               </Button>
               <Button
                 onClick={() => handleDelete(room.id)}
-                className="bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-4 py-1"
+                className="bg-red-100 text-red-700 hover:bg-red-200 rounded-lg px-4 py-1 cursor-pointer"
               >
                 Hapus
               </Button>
@@ -436,7 +453,7 @@ export default function RoomList() {
                 <Button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg px-4 py-2"
+                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg px-4 py-2 cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -446,7 +463,7 @@ export default function RoomList() {
                     isLoading
                       ? "bg-gray-400"
                       : "bg-black text-white hover:bg-gray-800"
-                  } text-white px-4 py-2 rounded-lg font-semibold`}
+                  } text-white px-4 py-2 rounded-lg font-semibold cursor-pointer`}
                   disabled={isLoading}
                 >
                   {isLoading ? "Loading..." : "Save"}
@@ -456,6 +473,44 @@ export default function RoomList() {
           </div>
         </div>
       )}
+
+      {/* Modal Konfirmasi Hapus */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Hapus Room?</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-center">
+            <div className="mx-auto mb-4 flex items-center justify-center h-14 w-14 rounded-full bg-red-100">
+              <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold mb-2">Apakah Anda yakin ingin menghapus room ini?</p>
+            <p className="text-gray-500 text-sm">Tindakan ini tidak dapat dibatalkan.</p>
+          </div>
+          <DialogFooter className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg px-4 py-1 cursor-pointer"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isLoading}
+              type="button"
+            >
+              Batal
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700 rounded-lg px-4 py-1 cursor-pointer"
+              onClick={handleDeleteConfirmed}
+              disabled={isLoading}
+              type="button"
+            >
+              {isLoading ? "Menghapus..." : "Hapus"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px);}
