@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +18,8 @@ import { assets } from "@/app/assets/assets";
 
 export default function AuthPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -37,11 +39,23 @@ export default function AuthPage() {
     password: "",
     confirmPassword: "",
     full_name: "",
-    phone_number: "",
   })
 
   // Form validation errors
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<{
+    login: {
+      email: string;
+      password: string;
+      general: string;
+    };
+    register: {
+      email: string;
+      password: string;
+      confirmPassword: string;
+      full_name: string;
+      general: string;
+    };
+  }>({
     login: {
       email: "",
       password: "",
@@ -52,7 +66,6 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
       full_name: "",
-      phone_number: "",
       general: "",
     },
   })
@@ -135,11 +148,6 @@ export default function AuthPage() {
       isValid = false
     }
 
-    if (!registerData.phone_number) {
-      newErrors.phone_number = "Phone number is required"
-      isValid = false
-    }
-
     if (!registerData.password) {
       newErrors.password = "Password is required"
       isValid = false
@@ -165,60 +173,132 @@ export default function AuthPage() {
   }
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError("");
 
     if (!validateLoginForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const result = await signIn("credentials", {
         email: loginData.email,
         password: loginData.password,
         redirect: false,
-      })
+        callbackUrl,
+      });
 
       if (result?.error) {
-        setError(result.error)
+        setError(result.error);
+        setErrors(prev => ({
+          ...prev,
+          login: {
+            ...prev.login,
+            general: result.error || ""
+          }
+        }));
+      } else if (result?.url) {
+        router.push(result.url);
       } else {
-        router.push("/")
+        router.push(callbackUrl);
       }
-    } catch (error) {
-      console.error("Login error:", error)
-      setError("An error occurred during login")
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(error?.message || "An error occurred during login");
+      setErrors(prev => ({
+        ...prev,
+        login: {
+          ...prev.login,
+          general: error?.message || "An error occurred during login"
+        }
+      }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError("");
 
     if (!validateRegisterForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+          name: registerData.full_name,
+        }),
+      });
 
-      // Redirect to dashboard or home page after successful registration
-      router.push("/")
-    } catch (error) {
-      console.error("Registration error:", error)
-      setError("Registration failed. Please try again.")
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // Auto login after successful registration
+      const result = await signIn("credentials", {
+        email: registerData.email,
+        password: registerData.password,
+        redirect: false,
+        callbackUrl: "/"
+      });
+
+      if (result?.error) {
+        setError(result.error);
+        setErrors(prev => ({
+          ...prev,
+          register: {
+            ...prev.register,
+            general: result.error || ""
+          }
+        }));
+      } else if (result?.url) {
+        router.push(result.url);
+      } else {
+        router.push("/");
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      setError(error?.message || "Registration failed. Please try again.");
+      setErrors(prev => ({
+        ...prev,
+        register: {
+          ...prev.register,
+          general: error?.message || "Registration failed. Please try again."
+        }
+      }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleGoogleAuth = () => {
-    signIn("google", { callbackUrl: "/" })
-  }
+  const handleGoogleAuth = async () => {
+    try {
+      setIsLoading(true);
+      await signIn("google", { 
+        callbackUrl,
+        redirect: true
+      });
+    } catch (error: any) {
+      console.error("Google auth error:", error);
+      setError(error?.message || "Google authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -330,8 +410,19 @@ export default function AuthPage() {
                       </div>
                     </CardContent>
                     <div className="px-6">
-                      <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
-                        {isLoading ? "Logging in..." : "Login"}
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Loading...</span>
+                          </div>
+                        ) : (
+                          "Sign In"
+                        )}
                       </Button>
                     </div>
                     <div className="relative my-6 px-6">
@@ -409,23 +500,6 @@ export default function AuthPage() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="register-phone">Phone Number</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-                          <Input
-                            id="register-phone"
-                            name="phone_number"
-                            placeholder="+1 (555) 123-4567"
-                            className="pl-10"
-                            value={registerData.phone_number}
-                            onChange={handleRegisterChange}
-                          />
-                        </div>
-                        {errors.register.phone_number && (
-                          <p className="text-red-500 text-xs mt-1">{errors.register.phone_number}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
                         <Label htmlFor="register-password">Password</Label>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
@@ -486,8 +560,15 @@ export default function AuthPage() {
                       </div>
                     </CardContent>
                     <div className="px-6">
-                      <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
-                        {isLoading ? "Creating account..." : "Create account"}
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Creating account...</span>
+                          </div>
+                        ) : (
+                          "Create account"
+                        )}
                       </Button>
                     </div>
                     <div className="relative my-6 px-6">

@@ -147,8 +147,8 @@ export function Header() {
             </Button>
           </>
         ) : (
-          <Link href="/login">
-            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
+          <Link href="/login" className="w-full">
+            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer w-full">
               Login
             </Button>
           </Link>
@@ -207,8 +207,8 @@ export function Header() {
             </button>
           </>
         ) : (
-          <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer">
+          <Link href="/login" onClick={() => setIsMenuOpen(false)} className="w-full">
+            <Button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer w-full">
               Login
             </Button>
           </Link>

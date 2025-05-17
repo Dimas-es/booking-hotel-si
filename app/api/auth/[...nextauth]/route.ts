@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from '@supabase/supabase-js';
@@ -8,16 +8,24 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
   throw new Error('Supabase environment variables are not set');
 }
 
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error('Google OAuth credentials are not set');
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not set');
+}
+
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -37,7 +45,12 @@ export const authOptions = {
             .eq('email', credentials.email)
             .single();
 
-          if (error || !user) {
+          if (error) {
+            console.error('Supabase error:', error);
+            throw new Error('Database error occurred');
+          }
+
+          if (!user) {
             throw new Error('No user found with this email');
           }
 
@@ -57,12 +70,16 @@ export const authOptions = {
             role: user.role,
           };
         } catch (err: any) {
-          // Pastikan error dilempar sebagai Error agar next-auth handle dengan benar
-          throw new Error(err?.message || 'Internal server error');
+          console.error('Auth error:', err);
+          throw new Error(err?.message || 'Authentication failed');
         }
       }
     })
   ],
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
   callbacks: {
     async jwt({ token, user, account }: any) {
       if (account && user) {
@@ -93,6 +110,11 @@ export const authOptions = {
             .eq('email', user.email)
             .single();
 
+          if (selectError && selectError.code !== 'PGRST116') {
+            console.error('Error checking existing user:', selectError);
+            throw new Error('Failed to check existing user');
+          }
+
           if (!existingUser) {
             const { error: insertError } = await supabase
               .from('users')
@@ -116,17 +138,23 @@ export const authOptions = {
         return true;
       } catch (err: any) {
         console.error('signIn callback error:', err);
-        throw new Error(err?.message || 'Internal server error');
+        throw new Error(err?.message || 'Authentication failed');
       }
     },
-  },
-  pages: {
-    signIn: '/login',
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   session: {
-    strategy: 'jwt' as const,
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);
