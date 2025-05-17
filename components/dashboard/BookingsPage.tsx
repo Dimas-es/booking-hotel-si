@@ -286,7 +286,6 @@ export default function BookingsPage() {
                   <SelectItem value="confirmed">Confirmed</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -496,7 +495,6 @@ export default function BookingsPage() {
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="cancelled">Cancelled</option>
-                  <option value="completed">Completed</option>
                 </select>
               </div>
               <div className="flex justify-end gap-2">

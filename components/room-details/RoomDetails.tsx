@@ -41,9 +41,13 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
   const [totalPrice, setTotalPrice] = useState(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
-  const router = useRouter();
-  const { data: session, status } = useSession();
+  const [isDateAvailable, setIsDateAvailable] = useState(true);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  // Fetch room details
   useEffect(() => {
     if (!roomId) return;
 
@@ -68,23 +72,47 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
         .eq("id", roomId)
         .single();
 
-      if (error) {
-        console.error("Error fetching room details:", error);
-      } else {
-        const formattedRoom = {
+      if (!error && data) {
+        setRoom({
           ...data,
-          room_number: String(data.room_number),
-          capacity: Number(data.capacity),
-          amenities: Array.isArray(data.amenities) ? data.amenities : [],
           room_images: data.room_images || [],
-        };
-        setRoom(formattedRoom);
+        });
       }
       setLoading(false);
     };
 
     fetchRoomDetails();
   }, [roomId]);
+
+  // Cek ketersediaan tanggal booking (hanya booking confirmed yang mencegah booking)
+  useEffect(() => {
+    const checkAvailability = async () => {
+      setIsDateAvailable(true);
+      setBookingError(null);
+      if (!checkIn || !checkOut || !room) return;
+      setCheckingAvailability(true);
+
+      // Cek booking confirmed yang overlap dengan tanggal yang dipilih
+      const { data: confirmedBookings } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("status", "confirmed")
+        .or(
+          `and(check_in_date,lt.${checkOut}),and(check_out_date,gt.${checkIn})`
+        );
+
+      // Jika ada booking confirmed yang overlap, tidak bisa booking
+      setIsDateAvailable(!confirmedBookings || confirmedBookings.length === 0);
+      setCheckingAvailability(false);
+    };
+
+    if (checkIn && checkOut && room) {
+      checkAvailability();
+    } else {
+      setIsDateAvailable(true);
+    }
+  }, [checkIn, checkOut, room]);
 
   useEffect(() => {
     if (checkIn && checkOut && room) {
@@ -93,41 +121,76 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
     }
   }, [checkIn, checkOut, room]);
 
+  // Cancel all pending bookings yang overlap jika ada yang confirmed
+  const autoCancelOverlappingPending = async (confirmedBookingId: string) => {
+    // Ambil data booking confirmed
+    const { data: confirmedBooking } = await supabase
+      .from("bookings")
+      .select("check_in_date,check_out_date")
+      .eq("id", confirmedBookingId)
+      .single();
+
+    if (!confirmedBooking) return;
+
+    // Cari semua booking pending yang overlap
+    const { data: pendingBookings } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("room_id", roomId)
+      .eq("status", "pending")
+      .or(
+        `and(check_in_date,lt.${confirmedBooking.check_out_date}),and(check_out_date,gt.${confirmedBooking.check_in_date})`
+      );
+
+    // Batalkan semua booking pending yang overlap
+    if (pendingBookings && pendingBookings.length > 0) {
+      for (const b of pendingBookings) {
+        await supabase
+          .from("bookings")
+          .update({ status: "cancelled" })
+          .eq("id", b.id);
+      }
+    }
+  };
+
+  // Pantau perubahan booking confirmed, lalu auto-cancel pending yang overlap
+  useEffect(() => {
+    const channel = supabase
+      .channel("booking-status")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "bookings" },
+        (payload) => {
+          if (
+            payload.new.status === "confirmed" &&
+            payload.old.status !== "confirmed"
+          ) {
+            autoCancelOverlappingPending(payload.new.id);
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId]);
+
   const handleBooking = async () => {
     setBookingError(null);
     if (!session || !session.user) {
-      if (typeof window !== "undefined") {
-        const loginDialog = document.createElement("div");
-        loginDialog.innerHTML = `<div style='background: white; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); padding: 32px; max-width: 320px; margin: 100px auto; text-align: center; font-family: inherit;'>
-          <div style='font-size: 2.5rem; color: #f59e42; margin-bottom: 12px;'>🔒</div>
-          <div style='font-size: 1.1rem; margin-bottom: 16px;'>You must be logged in to book a room.</div>
-          <button style='background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1rem; cursor: pointer;'>Login</button>
-        </div>`;
-        loginDialog.style.position = "fixed";
-        loginDialog.style.top = "0";
-        loginDialog.style.left = "0";
-        loginDialog.style.width = "100vw";
-        loginDialog.style.height = "100vh";
-        loginDialog.style.background = "rgba(0,0,0,0.25)";
-        loginDialog.style.zIndex = "9999";
-        loginDialog.onclick = (e) => {
-          if (e.target === loginDialog) loginDialog.remove();
-        };
-        loginDialog.querySelector("button")?.addEventListener("click", () => {
-          router.push("/login");
-          loginDialog.remove();
-        });
-        document.body.appendChild(loginDialog);
-      }
+      router.push("/login");
       return;
     }
     if (!room) {
       setBookingError("Room not found.");
       return;
     }
+    if (!isDateAvailable) {
+      setBookingError("Room is not available for the selected dates.");
+      return;
+    }
     let userId = (session.user as any)?.id;
     if (!userId && session.user?.email) {
-      // Fallback: fetch user id by email
       const { data: userProfile } = await supabase
         .from("users")
         .select("id")
@@ -153,17 +216,6 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
     }
   };
 
-  if (!roomId) {
-    return (
-      <div className="text-center mt-10">
-        <p className="text-lg text-gray-700 mb-4">Room Not Found</p>
-        <Button variant="outline" onClick={() => router.push("/list-rooms")} className="cursor-pointer">
-          Back to Rooms
-        </Button>
-      </div>
-    );
-  }
-
   if (loading) {
     return <p className="text-center mt-10 text-gray-500">Loading...</p>;
   }
@@ -178,14 +230,15 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
 
   const primaryImage =
     room.room_images.find((img) => img.is_primary)?.image_url ||
-    room.room_images[0]?.image_url;
+    room.room_images[0]?.image_url ||
+    "/fallback.jpg";
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl mt-16">
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
         <div className="aspect-video relative w-full">
           <Image
-            src={primaryImage ?? "/fallback.jpg"}
+            src={primaryImage}
             alt={room.room_type}
             fill
             className="object-cover"
@@ -216,12 +269,12 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                 <span className="font-semibold text-gray-700">Status:</span>{" "}
                 <Badge
                   className={`${
-                    room.is_available
+                    isDateAvailable
                       ? "bg-green-100 text-green-600"
                       : "bg-red-100 text-red-600"
                   } font-medium px-3 py-1 rounded-full`}
                 >
-                  {room.is_available ? "Available" : "Not Available"}
+                  {isDateAvailable ? "Available" : "Not Available"}
                 </Badge>
               </p>
             </div>
@@ -254,7 +307,9 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button disabled={!room.is_available} className="cursor-pointer">Book Now</Button>
+                <Button disabled={!isDateAvailable || checkingAvailability} className="cursor-pointer">
+                  Book Now
+                </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
@@ -305,15 +360,30 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                       </span>
                     </div>
 
+                    {!isDateAvailable && (
+                      <div className="text-red-600 text-sm font-medium">
+                        Room is not available for the selected dates.
+                      </div>
+                    )}
                     {bookingError && (
                       <div className="text-red-600 text-sm font-medium">{bookingError}</div>
                     )}
                     <Button
                       className="w-full"
-                      disabled={!checkIn || !checkOut || totalPrice <= 0}
+                      disabled={
+                        !checkIn ||
+                        !checkOut ||
+                        totalPrice <= 0 ||
+                        !isDateAvailable ||
+                        checkingAvailability
+                      }
                       onClick={handleBooking}
                     >
-                      Confirm Booking
+                      {checkingAvailability
+                        ? "Checking..."
+                        : !isDateAvailable
+                        ? "Room Not Available"
+                        : "Confirm Booking"}
                     </Button>
                   </div>
                 )}

@@ -10,12 +10,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { CalendarIcon, ChevronRight, Download, MapPin, Search, Star } from "lucide-react"
+import { CalendarIcon, Download, MapPin, Search } from "lucide-react"
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
-import { getBookingsByUserId, type BookingWithDetails, updateBookingStatus, editBooking, deleteBooking } from "./actions"
+import { getBookingsByUserId, type BookingWithDetails, updateBookingStatus, deleteBooking } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function MyBookingsPage() {
   const { data: session, status } = useSession()
@@ -24,10 +23,6 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<BookingWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [cancelLoadingId, setCancelLoadingId] = useState<string | null>(null)
-  const [editModal, setEditModal] = useState<{ open: boolean; booking?: BookingWithDetails }>({ open: false })
-  const [editForm, setEditForm] = useState<{ checkIn: string; checkOut: string; totalPrice: number }>({ checkIn: "", checkOut: "", totalPrice: 0 })
-  const [editLoading, setEditLoading] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -74,40 +69,6 @@ export default function MyBookingsPage() {
     fetchBookings();
   };
 
-  const handleEditBooking = async () => {
-    if (!session || !session.user || !editModal.booking) return;
-    setEditLoading(true);
-    setEditError(null);
-    let userId = (session.user as any)?.id;
-    if (!userId && session.user?.email) {
-      const { data: userProfile } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", session.user.email)
-        .single();
-      userId = userProfile?.id;
-    }
-    if (!userId) {
-      setEditError("User ID not found. Please re-login.");
-      setEditLoading(false);
-      return;
-    }
-    const result = await editBooking({
-      booking_id: editModal.booking.id,
-      user_id: userId,
-      check_in_date: editForm.checkIn,
-      check_out_date: editForm.checkOut,
-      total_price: editForm.totalPrice,
-    });
-    setEditLoading(false);
-    if (!result.success) {
-      setEditError(result.error || "Failed to edit booking");
-    } else {
-      setEditModal({ open: false });
-      fetchBookings();
-    }
-  };
-
   const handleDeleteBooking = async (bookingId: string) => {
     if (!session || !session.user) return;
     if (!window.confirm("Are you sure you want to delete this booking?")) return;
@@ -136,13 +97,13 @@ export default function MyBookingsPage() {
     return matchesSearch
   })
 
-  const upcomingBookings = filteredBookings.filter((booking) => booking.status === "pending")
-  const completedBookings = filteredBookings.filter((booking) => booking.status === "completed")
+  const pendingBookings = filteredBookings.filter((booking) => booking.status === "pending")
+  const confirmedBooking = filteredBookings.filter((booking) => booking.status === "confirmed")
   const cancelledBookings = filteredBookings.filter((booking) => booking.status === "cancelled")
 
   if (status === "loading" || isLoading) {
-  return (
-    <div className="flex min-h-screen flex-col">
+    return (
+      <div className="flex min-h-screen flex-col mt-16">
         <Header />
         <main className="flex-1 bg-gray-50">
           <div className="container mx-auto px-4 py-8">
@@ -154,17 +115,17 @@ export default function MyBookingsPage() {
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-48 bg-gray-200 rounded"></div>
                 ))}
-            </div>
+              </div>
             </div>
           </div>
         </main>
         <Footer />
-        </div>
+      </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col mt-16">
       <Header />
       <main className="flex-1 bg-gray-50">
         <div className="container mx-auto px-4 py-8">
@@ -185,39 +146,32 @@ export default function MyBookingsPage() {
             </div>
           </div>
 
-          <Tabs defaultValue="upcoming" className="w-full">
+          <Tabs defaultValue="pending" className="w-full">
             <TabsList className="mb-6">
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="confirmed">Confirmed</TabsTrigger>
               <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="upcoming" className="space-y-6">
-              {upcomingBookings.length === 0 ? (
+            <TabsContent value="pending" className="space-y-6">
+              {pendingBookings.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                     <CalendarIcon className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium mb-1">No upcoming bookings</h3>
-                  <p className="text-gray-500 mb-4">You don't have any upcoming reservations</p>
+                  <h3 className="text-lg font-medium mb-1">No pending bookings</h3>
+                  <p className="text-gray-500 mb-4">You don&#39;t have any pending reservations</p>
                   <Button asChild>
                     <Link href="/list-rooms">Find a room</Link>
                   </Button>
                 </div>
               ) : (
-                upcomingBookings.map((booking) => (
+                pendingBookings.map((booking) => (
                   <BookingCard
                     key={booking.id}
                     booking={booking}
                     cancelLoadingId={cancelLoadingId}
                     handleCancelBooking={handleCancelBooking}
-                    editModal={editModal}
-                    setEditModal={setEditModal}
-                    editForm={editForm}
-                    setEditForm={setEditForm}
-                    editLoading={editLoading}
-                    editError={editError}
-                    handleEditBooking={handleEditBooking}
                     deleteLoadingId={deleteLoadingId}
                     handleDeleteBooking={handleDeleteBooking}
                   />
@@ -225,20 +179,20 @@ export default function MyBookingsPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="completed" className="space-y-6">
-              {completedBookings.length === 0 ? (
+            <TabsContent value="confirmed" className="space-y-6">
+              {confirmedBooking.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                     <CalendarIcon className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium mb-1">No completed bookings</h3>
-                  <p className="text-gray-500 mb-4">You don't have any completed stays</p>
+                  <h3 className="text-lg font-medium mb-1">No confirmed bookings</h3>
+                  <p className="text-gray-500 mb-4">You don&#39;t have any confirmed stays</p>
                   <Button asChild>
                     <Link href="/list-rooms">Find a room</Link>
                   </Button>
                 </div>
               ) : (
-                completedBookings.map((booking) => (
+                confirmedBooking.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               )}
@@ -251,7 +205,7 @@ export default function MyBookingsPage() {
                     <CalendarIcon className="h-8 w-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium mb-1">No cancelled bookings</h3>
-                  <p className="text-gray-500 mb-4">You don't have any cancelled reservations</p>
+                  <p className="text-gray-500 mb-4">You don&#39;t have any cancelled reservations</p>
                   <Button asChild>
                     <Link href="/list-rooms">Find a room</Link>
                   </Button>
@@ -270,7 +224,19 @@ export default function MyBookingsPage() {
   )
 }
 
-function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal, setEditModal, editForm, setEditForm, editLoading, editError, handleEditBooking, deleteLoadingId, handleDeleteBooking }: { booking: BookingWithDetails, cancelLoadingId?: string | null, handleCancelBooking?: (id: string) => void, editModal?: { open: boolean; booking?: BookingWithDetails }, setEditModal?: React.Dispatch<React.SetStateAction<{ open: boolean; booking?: BookingWithDetails }>>, editForm?: { checkIn: string; checkOut: string; totalPrice: number }, setEditForm?: React.Dispatch<React.SetStateAction<{ checkIn: string; checkOut: string; totalPrice: number }>>, editLoading?: boolean, editError?: string | null, handleEditBooking?: () => void, deleteLoadingId?: string | null, handleDeleteBooking?: (id: string) => void }) {
+function BookingCard({
+  booking,
+  cancelLoadingId,
+  handleCancelBooking,
+  deleteLoadingId,
+  handleDeleteBooking,
+}: {
+  booking: BookingWithDetails,
+  cancelLoadingId?: string | null,
+  handleCancelBooking?: (id: string) => void,
+  deleteLoadingId?: string | null,
+  handleDeleteBooking?: (id: string) => void
+}) {
   const primaryImage = booking.room.room_images.find((img) => img.is_primary)?.image_url || booking.room.room_images[0]?.image_url
 
   return (
@@ -293,8 +259,8 @@ function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal,
                   <Badge
                     className={
                       booking.status === "pending"
-                        ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
-                        : booking.status === "completed"
+                        ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                        : booking.status === "confirmed"
                           ? "bg-green-100 text-green-800 hover:bg-green-100"
                           : "bg-red-100 text-red-800 hover:bg-red-100"
                     }
@@ -321,7 +287,7 @@ function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal,
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Price per night</p>
-                    <p className="font-medium">${booking.room.price_per_night}</p>
+                    <p className="font-medium">Rp. {booking.room.price_per_night}</p>
                   </div>
                 </div>
                 <div>
@@ -338,18 +304,18 @@ function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal,
               <div className="text-right">
                 <div className="mb-2">
                   <p className="text-xs text-gray-500">Total amount</p>
-                  <p className="font-bold text-lg">${booking.total_price}</p>
+                  <p className="font-bold text-lg">Rp. {booking.total_price}</p>
                 </div>
                 <Badge
                   className={
-                    booking.status === "completed"
+                    booking.status === "confirmed"
                       ? "bg-green-100 text-green-800 hover:bg-green-100"
                       : booking.status === "pending"
                         ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
                         : "bg-gray-100 text-gray-800 hover:bg-gray-100"
                   }
                 >
-                  {booking.status === "completed" ? "Paid" : booking.status === "pending" ? "Pending" : "Refunded"}
+                  {booking.status === "confirmed" ? "Confirmed" : booking.status === "pending" ? "Pending" : "Refunded"}
                 </Badge>
               </div>
             </div>
@@ -359,44 +325,15 @@ function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal,
                 <span className="font-medium">{booking.id}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {booking.status === "completed" && (
-                  <Button variant="outline" size="sm" className="gap-1">
+                {booking.status === "confirmed" && (
+                  <Button variant="outline" size="sm" className="gap-1 cursor-pointer">
                     <Download className="h-4 w-4" /> Invoice
                   </Button>
                 )}
-                {(booking.status === "pending" || booking.status === "cancelled") && editModal && setEditModal && editForm && setEditForm && typeof editLoading !== 'undefined' && typeof editError !== 'undefined' && handleEditBooking && typeof deleteLoadingId !== 'undefined' && handleDeleteBooking && (
-                  <>
-                    <Dialog open={editModal.open && editModal.booking?.id === booking.id} onOpenChange={(open) => setEditModal(open ? { open: true, booking } : { open: false })}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setEditForm({
-                            checkIn: booking.check_in_date,
-                            checkOut: booking.check_out_date,
-                            totalPrice: booking.total_price,
-                          });
-                          setEditModal({ open: true, booking });
-                        }}>Edit</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Booking</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-3">
-                          <label className="block text-sm">Check-in Date</label>
-                          <input type="date" className="border rounded px-2 py-1 w-full" value={editForm.checkIn} onChange={e => setEditForm(f => ({ ...f, checkIn: e.target.value }))} />
-                          <label className="block text-sm">Check-out Date</label>
-                          <input type="date" className="border rounded px-2 py-1 w-full" value={editForm.checkOut} onChange={e => setEditForm(f => ({ ...f, checkOut: e.target.value }))} />
-                          <label className="block text-sm">Total Price</label>
-                          <input type="number" className="border rounded px-2 py-1 w-full" value={editForm.totalPrice} onChange={e => setEditForm(f => ({ ...f, totalPrice: Number(e.target.value) }))} />
-                          {editError && <div className="text-red-600 text-sm">{editError}</div>}
-                          <Button className="w-full" onClick={() => handleEditBooking && handleEditBooking()} disabled={editLoading}>{editLoading ? "Saving..." : "Save Changes"}</Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" disabled={deleteLoadingId === booking.id} onClick={() => handleDeleteBooking && handleDeleteBooking(booking.id)}>{deleteLoadingId === booking.id ? "Deleting..." : "Delete"}</Button>
-                  </>
+                {(booking.status === "pending" || booking.status === "cancelled") && handleDeleteBooking && (
+                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer" disabled={deleteLoadingId === booking.id} onClick={() => handleDeleteBooking(booking.id)}>{deleteLoadingId === booking.id ? "Deleting..." : "Delete"}</Button>
                 )}
-                <Button size="sm" asChild>
+                <Button size="sm" className="cursor-pointer" asChild>
                   <Link href={`/my-bookings/${booking.id}`}>View Details</Link>
                 </Button>
               </div>

@@ -72,6 +72,55 @@ export default function ListRooms() {
     fetchRooms();
   }, []);
 
+  // Hanya booking confirmed yang membuat room jadi Not Available
+  useEffect(() => {
+    const updateRoomAvailability = async () => {
+      const today = new Date().toISOString().split("T")[0];
+      if (rooms.length === 0) return;
+
+      // Ambil semua booking confirmed yang overlap hari ini
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("room_id,check_in_date,check_out_date")
+        .eq("status", "confirmed");
+
+      setRooms((prev) =>
+        prev.map((room) => {
+          // Cek apakah ada booking confirmed yang overlap hari ini
+          const hasConfirmed =
+            bookings &&
+            bookings.some(
+              (b) =>
+                b.room_id === room.id &&
+                b.check_in_date <= today &&
+                b.check_out_date > today
+            );
+          return {
+            ...room,
+            is_available: !hasConfirmed,
+          };
+        })
+      );
+      setFilteredRooms((prev) =>
+        prev.map((room) => {
+          const hasConfirmed =
+            bookings &&
+            bookings.some(
+              (b) =>
+                b.room_id === room.id &&
+                b.check_in_date <= today &&
+                b.check_out_date > today
+            );
+          return {
+            ...room,
+            is_available: !hasConfirmed,
+          };
+        })
+      );
+    };
+    updateRoomAvailability();
+  }, [rooms]);
+
   useEffect(() => {
     let filtered = [...rooms];
 
