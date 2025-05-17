@@ -21,7 +21,6 @@ import {
   HotelIcon,
   LayoutDashboard,
   LogOut,
-  Settings,
   Users,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -107,21 +106,6 @@ function AdminSidebar() {
                   <Link href="/dashboard/users">
                     <Users className="h-4 w-4" />
                     <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/dashboard/settings">
-                    <Settings className="h-4 w-4" />
-                    <span>Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -4,15 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { assets } from "@/app/assets/assets";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 
 // Avatar component
-function Avatar({ src, alt, name }: { src?: string; alt?: string; name?: string }) {
+function Avatar({ src, alt, name, onClick }: { src?: string; alt?: string; name?: string; onClick?: () => void }) {
   return (
-    <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 overflow-hidden border">
+    <span
+      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-200 overflow-hidden border cursor-pointer"
+      onClick={onClick}
+    >
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={alt || "User"} className="object-cover w-full h-full" />
@@ -47,18 +50,13 @@ export function Header() {
     { name: "Home", path: "/" },
     { name: "Rooms", path: "/list-rooms" },
     { name: "Gallery", path: "/gallery" },
-    { name: "About", path: "/about" },
   ];
-
-  // Tambahkan "My Bookings" hanya jika sudah login
-  const navLinks =
-    status === "authenticated" && session?.user
-      ? [...baseNavLinks, { name: "My Bookings", path: "/my-bookings" }]
-      : baseNavLinks;
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch avatar from Supabase users table
   useEffect(() => {
@@ -83,6 +81,21 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   const textColorClass = isHomePage
     ? isScrolled
@@ -111,7 +124,7 @@ export function Header() {
 
       {/* Desktop Nav */}
       <div className="hidden md:flex items-center gap-4 lg:gap-8">
-        {navLinks.map((link, i) => (
+        {baseNavLinks.map((link, i) => (
           <Link
             key={i}
             href={link.path}
@@ -128,23 +141,43 @@ export function Header() {
       </div>
 
       {/* Desktop Right */}
-      <div className="hidden md:flex items-center gap-4">
+      <div className="hidden md:flex items-center gap-4 relative">
         {status === "loading" ? (
           <div className="w-24 h-9 bg-gray-200 rounded-full animate-pulse" />
         ) : status === "authenticated" && session?.user ? (
           <>
-            {/* Avatar User */}
-            <Avatar
-              src={avatarUrl || undefined}
-              alt={session.user.name || "User"}
-              name={session.user.name || session.user.email}
-            />
-            <Button
-              className="bg-red-600 text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              Logout
-            </Button>
+            {/* Avatar User with Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <Avatar
+                src={avatarUrl || undefined}
+                alt={session.user.name || "User"}
+                name={session.user.name || session.user.email}
+                onClick={() => setDropdownOpen((v) => !v)}
+              />
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border z-50 py-2 animate-fadeIn">
+                  <div className="px-4 py-2 border-b text-sm text-gray-700 font-semibold">
+                    {session.user.name || session.user.email}
+                  </div>
+                  <Link
+                    href="/my-bookings"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    My Bookings
+                  </Link>
+                  <button
+                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      signOut({ callbackUrl: "/" });
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <Link href="/login" className="w-full">
@@ -180,7 +213,7 @@ export function Header() {
           <Image src={assets.closeIcon} alt="Close" className="h-6 w-6" />
         </button>
 
-        {navLinks.map((link, i) => (
+        {baseNavLinks.map((link, i) => (
           <Link key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
             {link.name}
           </Link>
@@ -196,12 +229,21 @@ export function Header() {
                 name={session.user.name || session.user.email}
               />
             </div>
+            <Link
+              href="/my-bookings"
+              className="w-full text-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Button className="bg-gray-100 text-gray-800 w-full mb-2">
+                My Bookings
+              </Button>
+            </Link>
             <button
               onClick={() => {
                 setIsMenuOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="bg-red-600 text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer"
+              className="bg-red-600 text-white px-8 py-2.5 rounded-full transition-all duration-500 cursor-pointer w-full"
             >
               Logout
             </button>
@@ -214,6 +256,15 @@ export function Header() {
           </Link>
         )}
       </div>
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px);}
+          to { opacity: 1; transform: translateY(0);}
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s;
+        }
+      `}</style>
     </nav>
   );
 }

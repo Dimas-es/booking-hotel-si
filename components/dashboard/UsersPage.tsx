@@ -21,7 +21,7 @@ import {
   TableCell,
   Table,
 } from "@/components/ui/table";
-import { SearchIcon, Plus } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -85,17 +85,6 @@ export default function UsersPage() {
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  }
-
-  function handleOpenAdd() {
-    setEditingUser(null);
-    setFormData({
-      name: "",
-      email: "",
-      role: "user",
-      image: "",
-    });
-    setShowModal(true);
   }
 
   function handleOpenEdit(user: User) {
@@ -175,11 +164,6 @@ export default function UsersPage() {
         <div>
           <h1 className="text-3xl font-bold mb-1">Users</h1>
           <p className="text-gray-500">Manage user accounts and permissions</p>
-        </div>
-        <div className="flex gap-2">
-          <Button className="gap-1 bg-black text-white hover:bg-gray-800 rounded-lg px-4 py-1 cursor-pointer" onClick={handleOpenAdd}>
-            <Plus className="h-4 w-4" /> Add New User
-          </Button>
         </div>
       </div>
 
