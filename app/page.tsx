@@ -22,19 +22,8 @@ export default function Home() {
         if (typeof window !== "undefined") {
           window.location.href = "/dashboard";
         }
-      } else {
-        // Jika user Google, tapi role belum admin, reload untuk refresh session
-        // (mengatasi cache session lama setelah login)
-        if (typeof window !== "undefined" && session?.user?.email && session?.user?.email.endsWith("@gmail.com")) {
-          // Cek localStorage agar reload hanya sekali
-          if (!localStorage.getItem("_force_session_reload")) {
-            localStorage.setItem("_force_session_reload", "1");
-            window.location.reload();
-          } else {
-            localStorage.removeItem("_force_session_reload");
-          }
-        }
       }
+      // User biasa tidak perlu redirect atau reload apapun
     }
   }, [session, status, router]);
 
