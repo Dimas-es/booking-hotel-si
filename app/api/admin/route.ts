@@ -1,22 +1,13 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const session = await getServerSession(authOptions);
 
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", session.user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
+  if ((session.user as any)?.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

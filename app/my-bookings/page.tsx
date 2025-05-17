@@ -1,0 +1,409 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { CalendarIcon, ChevronRight, Download, MapPin, Search, Star } from "lucide-react"
+import { Header } from "@/components/layout/Header"
+import { Footer } from "@/components/layout/Footer"
+import { getBookingsByUserId, type BookingWithDetails, updateBookingStatus, editBooking, deleteBooking } from "./actions"
+import { supabase } from "@/lib/supabase"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+
+export default function MyBookingsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [bookings, setBookings] = useState<BookingWithDetails[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [cancelLoadingId, setCancelLoadingId] = useState<string | null>(null)
+  const [editModal, setEditModal] = useState<{ open: boolean; booking?: BookingWithDetails }>({ open: false })
+  const [editForm, setEditForm] = useState<{ checkIn: string; checkOut: string; totalPrice: number }>({ checkIn: "", checkOut: "", totalPrice: 0 })
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login")
+    } else if (status === "authenticated" && session?.user) {
+      fetchBookings()
+    }
+  }, [status, session, router])
+
+  const fetchBookings = async () => {
+    if (!session || !session.user) return;
+    let userId = (session.user as any)?.id;
+    if (!userId && session.user?.email) {
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      userId = userProfile?.id;
+    }
+    if (!userId) return;
+    setIsLoading(true);
+    const data = await getBookingsByUserId(userId);
+    setBookings(data);
+    setIsLoading(false);
+  }
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!session || !session.user) return;
+    setCancelLoadingId(bookingId);
+    let userId = (session.user as any)?.id;
+    if (!userId && session.user?.email) {
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      userId = userProfile?.id;
+    }
+    if (!userId) return;
+    await updateBookingStatus({ booking_id: bookingId, status: "cancelled", user_id: userId });
+    setCancelLoadingId(null);
+    fetchBookings();
+  };
+
+  const handleEditBooking = async () => {
+    if (!session || !session.user || !editModal.booking) return;
+    setEditLoading(true);
+    setEditError(null);
+    let userId = (session.user as any)?.id;
+    if (!userId && session.user?.email) {
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      userId = userProfile?.id;
+    }
+    if (!userId) {
+      setEditError("User ID not found. Please re-login.");
+      setEditLoading(false);
+      return;
+    }
+    const result = await editBooking({
+      booking_id: editModal.booking.id,
+      user_id: userId,
+      check_in_date: editForm.checkIn,
+      check_out_date: editForm.checkOut,
+      total_price: editForm.totalPrice,
+    });
+    setEditLoading(false);
+    if (!result.success) {
+      setEditError(result.error || "Failed to edit booking");
+    } else {
+      setEditModal({ open: false });
+      fetchBookings();
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!session || !session.user) return;
+    if (!window.confirm("Are you sure you want to delete this booking?")) return;
+    setDeleteLoadingId(bookingId);
+    let userId = (session.user as any)?.id;
+    if (!userId && session.user?.email) {
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      userId = userProfile?.id;
+    }
+    if (!userId) return;
+    await deleteBooking({ booking_id: bookingId, user_id: userId });
+    setDeleteLoadingId(null);
+    fetchBookings();
+  };
+
+  // Filter bookings based on search query and status
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch =
+      booking.room.room_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.room.room_number.toLowerCase().includes(searchQuery.toLowerCase())
+
+    return matchesSearch
+  })
+
+  const upcomingBookings = filteredBookings.filter((booking) => booking.status === "pending")
+  const completedBookings = filteredBookings.filter((booking) => booking.status === "completed")
+  const cancelledBookings = filteredBookings.filter((booking) => booking.status === "cancelled")
+
+  if (status === "loading" || isLoading) {
+  return (
+    <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 w-48 bg-gray-200 rounded"></div>
+              <div className="h-4 w-96 bg-gray-200 rounded"></div>
+              <div className="h-10 w-full max-w-md bg-gray-200 rounded"></div>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-48 bg-gray-200 rounded"></div>
+                ))}
+            </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+        </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
+            <p className="text-gray-600">Manage your reservations and view your booking history</p>
+          </div>
+
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                placeholder="Search by room type or number..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Tabs defaultValue="upcoming" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upcoming" className="space-y-6">
+              {upcomingBookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <CalendarIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No upcoming bookings</h3>
+                  <p className="text-gray-500 mb-4">You don't have any upcoming reservations</p>
+                  <Button asChild>
+                    <Link href="/list-rooms">Find a room</Link>
+                  </Button>
+                </div>
+              ) : (
+                upcomingBookings.map((booking) => (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    cancelLoadingId={cancelLoadingId}
+                    handleCancelBooking={handleCancelBooking}
+                    editModal={editModal}
+                    setEditModal={setEditModal}
+                    editForm={editForm}
+                    setEditForm={setEditForm}
+                    editLoading={editLoading}
+                    editError={editError}
+                    handleEditBooking={handleEditBooking}
+                    deleteLoadingId={deleteLoadingId}
+                    handleDeleteBooking={handleDeleteBooking}
+                  />
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="completed" className="space-y-6">
+              {completedBookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <CalendarIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No completed bookings</h3>
+                  <p className="text-gray-500 mb-4">You don't have any completed stays</p>
+                  <Button asChild>
+                    <Link href="/list-rooms">Find a room</Link>
+                  </Button>
+                </div>
+              ) : (
+                completedBookings.map((booking) => (
+                  <BookingCard key={booking.id} booking={booking} />
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="cancelled" className="space-y-6">
+              {cancelledBookings.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <CalendarIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No cancelled bookings</h3>
+                  <p className="text-gray-500 mb-4">You don't have any cancelled reservations</p>
+                  <Button asChild>
+                    <Link href="/list-rooms">Find a room</Link>
+                  </Button>
+                </div>
+              ) : (
+                cancelledBookings.map((booking) => (
+                  <BookingCard key={booking.id} booking={booking} />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  )
+}
+
+function BookingCard({ booking, cancelLoadingId, handleCancelBooking, editModal, setEditModal, editForm, setEditForm, editLoading, editError, handleEditBooking, deleteLoadingId, handleDeleteBooking }: { booking: BookingWithDetails, cancelLoadingId?: string | null, handleCancelBooking?: (id: string) => void, editModal?: { open: boolean; booking?: BookingWithDetails }, setEditModal?: React.Dispatch<React.SetStateAction<{ open: boolean; booking?: BookingWithDetails }>>, editForm?: { checkIn: string; checkOut: string; totalPrice: number }, setEditForm?: React.Dispatch<React.SetStateAction<{ checkIn: string; checkOut: string; totalPrice: number }>>, editLoading?: boolean, editError?: string | null, handleEditBooking?: () => void, deleteLoadingId?: string | null, handleDeleteBooking?: (id: string) => void }) {
+  const primaryImage = booking.room.room_images.find((img) => img.is_primary)?.image_url || booking.room.room_images[0]?.image_url
+
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row">
+          <div className="relative h-48 md:h-auto md:w-1/3 lg:w-1/4">
+            <Image
+              src={primaryImage || "/placeholder.svg"}
+              alt={booking.room.room_type}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="flex-1 p-6">
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-lg">{booking.room.room_type}</h3>
+                  <Badge
+                    className={
+                      booking.status === "pending"
+                        ? "bg-blue-100 text-blue-800 hover:bg-blue-100"
+                        : booking.status === "completed"
+                          ? "bg-green-100 text-green-800 hover:bg-green-100"
+                          : "bg-red-100 text-red-800 hover:bg-red-100"
+                    }
+                  >
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="flex items-center text-sm text-gray-500 mb-2">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  <span>Room {booking.room.room_number}</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Check-in</p>
+                    <p className="font-medium">{new Date(booking.check_in_date).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Check-out</p>
+                    <p className="font-medium">{new Date(booking.check_out_date).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Capacity</p>
+                    <p className="font-medium">{booking.room.capacity} guests</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Price per night</p>
+                    <p className="font-medium">${booking.room.price_per_night}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">Amenities</p>
+                  <div className="flex flex-wrap gap-2">
+                    {booking.room.amenities.map((amenity, index) => (
+                      <Badge key={index} variant="outline" className="bg-gray-50">
+                        {amenity}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="mb-2">
+                  <p className="text-xs text-gray-500">Total amount</p>
+                  <p className="font-bold text-lg">${booking.total_price}</p>
+                </div>
+                <Badge
+                  className={
+                    booking.status === "completed"
+                      ? "bg-green-100 text-green-800 hover:bg-green-100"
+                      : booking.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-100"
+                  }
+                >
+                  {booking.status === "completed" ? "Paid" : booking.status === "pending" ? "Pending" : "Refunded"}
+                </Badge>
+              </div>
+            </div>
+            <div className="border-t mt-4 pt-4 flex flex-wrap gap-2 justify-between items-center">
+              <div className="text-sm text-gray-500">
+                <span>Booking ID: </span>
+                <span className="font-medium">{booking.id}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {booking.status === "completed" && (
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <Download className="h-4 w-4" /> Invoice
+                  </Button>
+                )}
+                {(booking.status === "pending" || booking.status === "cancelled") && editModal && setEditModal && editForm && setEditForm && typeof editLoading !== 'undefined' && typeof editError !== 'undefined' && handleEditBooking && typeof deleteLoadingId !== 'undefined' && handleDeleteBooking && (
+                  <>
+                    <Dialog open={editModal.open && editModal.booking?.id === booking.id} onOpenChange={(open) => setEditModal(open ? { open: true, booking } : { open: false })}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setEditForm({
+                            checkIn: booking.check_in_date,
+                            checkOut: booking.check_out_date,
+                            totalPrice: booking.total_price,
+                          });
+                          setEditModal({ open: true, booking });
+                        }}>Edit</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Edit Booking</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                          <label className="block text-sm">Check-in Date</label>
+                          <input type="date" className="border rounded px-2 py-1 w-full" value={editForm.checkIn} onChange={e => setEditForm(f => ({ ...f, checkIn: e.target.value }))} />
+                          <label className="block text-sm">Check-out Date</label>
+                          <input type="date" className="border rounded px-2 py-1 w-full" value={editForm.checkOut} onChange={e => setEditForm(f => ({ ...f, checkOut: e.target.value }))} />
+                          <label className="block text-sm">Total Price</label>
+                          <input type="number" className="border rounded px-2 py-1 w-full" value={editForm.totalPrice} onChange={e => setEditForm(f => ({ ...f, totalPrice: Number(e.target.value) }))} />
+                          {editError && <div className="text-red-600 text-sm">{editError}</div>}
+                          <Button className="w-full" onClick={() => handleEditBooking && handleEditBooking()} disabled={editLoading}>{editLoading ? "Saving..." : "Save Changes"}</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" disabled={deleteLoadingId === booking.id} onClick={() => handleDeleteBooking && handleDeleteBooking(booking.id)}>{deleteLoadingId === booking.id ? "Deleting..." : "Delete"}</Button>
+                  </>
+                )}
+                <Button size="sm" asChild>
+                  <Link href={`/my-bookings/${booking.id}`}>View Details</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

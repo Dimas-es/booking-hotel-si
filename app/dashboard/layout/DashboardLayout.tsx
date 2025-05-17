@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { assets } from "@/app/assets/assets";
+import { signOut } from "next-auth/react";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -132,10 +133,13 @@ function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/logout">
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-2 w-full text-left bg-transparent border-0 p-0 m-0 cursor-pointer"
+              >
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
-              </Link>
+              </button>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

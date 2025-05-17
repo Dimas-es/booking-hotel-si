@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { differenceInDays } from "date-fns";
+import { useSession } from "next-auth/react";
+import { CheckCircle2 } from "lucide-react";
+import { createBooking } from "@/app/my-bookings/actions";
 
 type Room = {
   id: string;
@@ -37,7 +40,9 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
   const [checkOut, setCheckOut] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (!roomId) return;
@@ -89,25 +94,60 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
   }, [checkIn, checkOut, room]);
 
   const handleBooking = async () => {
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
-
-    if (!userId || !room) {
-      alert("User not logged in or room not found.");
+    setBookingError(null);
+    if (!session || !session.user) {
+      if (typeof window !== "undefined") {
+        const loginDialog = document.createElement("div");
+        loginDialog.innerHTML = `<div style='background: white; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); padding: 32px; max-width: 320px; margin: 100px auto; text-align: center; font-family: inherit;'>
+          <div style='font-size: 2.5rem; color: #f59e42; margin-bottom: 12px;'>🔒</div>
+          <div style='font-size: 1.1rem; margin-bottom: 16px;'>You must be logged in to book a room.</div>
+          <button style='background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1rem; cursor: pointer;'>Login</button>
+        </div>`;
+        loginDialog.style.position = "fixed";
+        loginDialog.style.top = "0";
+        loginDialog.style.left = "0";
+        loginDialog.style.width = "100vw";
+        loginDialog.style.height = "100vh";
+        loginDialog.style.background = "rgba(0,0,0,0.25)";
+        loginDialog.style.zIndex = "9999";
+        loginDialog.onclick = (e) => {
+          if (e.target === loginDialog) loginDialog.remove();
+        };
+        loginDialog.querySelector("button")?.addEventListener("click", () => {
+          router.push("/login");
+          loginDialog.remove();
+        });
+        document.body.appendChild(loginDialog);
+      }
       return;
     }
-
-    const { error } = await supabase.from("bookings").insert({
+    if (!room) {
+      setBookingError("Room not found.");
+      return;
+    }
+    let userId = (session.user as any)?.id;
+    if (!userId && session.user?.email) {
+      // Fallback: fetch user id by email
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", session.user.email)
+        .single();
+      userId = userProfile?.id;
+    }
+    if (!userId) {
+      setBookingError("User ID not found. Please re-login.");
+      return;
+    }
+    const result = await createBooking({
       user_id: userId,
       room_id: room.id,
       check_in_date: checkIn,
       check_out_date: checkOut,
       total_price: totalPrice,
     });
-
-    if (error) {
-      console.error("Booking failed:", error);
-      alert("Booking failed");
+    if (!result.success) {
+      setBookingError(result.error || "Booking failed");
     } else {
       setBookingSuccess(true);
     }
@@ -222,9 +262,19 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                 </DialogHeader>
 
                 {bookingSuccess ? (
-                  <p className="text-green-600 font-medium">
-                    Booking successful!
-                  </p>
+                  <div className="flex flex-col items-center gap-3 py-6">
+                    <CheckCircle2 className="h-12 w-12 text-green-500 mb-2" />
+                    <p className="text-green-600 font-semibold text-lg mb-2">
+                      Booking successful!
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => router.push("/list-rooms")}
+                    >
+                      Back to Room List
+                    </Button>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     <div>
@@ -255,6 +305,9 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                       </span>
                     </div>
 
+                    {bookingError && (
+                      <div className="text-red-600 text-sm font-medium">{bookingError}</div>
+                    )}
                     <Button
                       className="w-full"
                       disabled={!checkIn || !checkOut || totalPrice <= 0}
