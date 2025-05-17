@@ -1,31 +1,18 @@
-// import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-// import { cookies } from "next/headers";
-// import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 import DashboardPage from "@/components/dashboard/DashboardPage";
 
 export default async function DashboardAdmin() {
-  // const supabase = createServerComponentClient({ cookies });
-  // const {
-  //   data: { session },
-  // } = await supabase.auth.getSession();
+  const session = await getServerSession(authOptions);
+  console.log("DASHBOARD SESSION", session);
 
-  // if (!session) {
-  //   return redirect("/");
-  // }
-
-  // const { data: profile } = await supabase
-  //   .from("users")
-  //   .select("role")
-  //   .eq("id", session.user.id)
-  //   .single();
-
-  // if (profile?.role !== "admin") {
-  //   return redirect("/");
-  // }
+  if (!session) return redirect("/");
+  if ((session.user as any)?.role !== "admin") return redirect("/");
 
   return (
-      <div className="flex min-h-screen flex-col">
-        <DashboardPage />
-      </div>
-    )
+    <div className="flex min-h-screen flex-col">
+      <DashboardPage />
+    </div>
+  );
 }

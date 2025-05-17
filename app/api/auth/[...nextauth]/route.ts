@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import { getToken } from "next-auth/jwt";
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error('Supabase environment variables are not set');
@@ -81,17 +82,23 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user, account }: any) {
-      if (account && user) {
-        return {
-          ...token,
-          role: user.role,
-          id: user.id,
-        };
+    async jwt({ token, user, account }) {
+      const email = token.email || user?.email || account?.email;
+      if (email) {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('id, role, email')
+          .eq('email', email)
+          .single();
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.id = dbUser.id;
+          token.email = dbUser.email;
+        }
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       return {
         ...session,
         user: {
@@ -101,7 +108,7 @@ export const authOptions: NextAuthOptions = {
         },
       };
     },
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user, account, profile }) {
       try {
         if (account?.provider === "google") {
           const { data: existingUser, error: selectError } = await supabase
@@ -124,7 +131,7 @@ export const authOptions: NextAuthOptions = {
                   name: user.name,
                   image: user.image,
                   provider: account.provider,
-                  provider_id: profile.sub,
+                  provider_id: profile?.sub,
                   role: 'user',
                 }
               ]);
@@ -136,16 +143,15 @@ export const authOptions: NextAuthOptions = {
           }
         }
         return true;
-      } catch (err: any) {
+      } catch (err) {
         console.error('signIn callback error:', err);
-        throw new Error(err?.message || 'Authentication failed');
+        throw new Error((err as any)?.message || 'Authentication failed');
       }
     },
     async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      } else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
   },

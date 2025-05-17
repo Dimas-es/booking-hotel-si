@@ -1,51 +1,45 @@
-// import { NextResponse } from "next/server";
-// import type { NextRequest } from "next/server";
-// import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import type { NextRequest } from "next/server";
 
-// export async function middleware(request: NextRequest) {
-//   const res = NextResponse.next();
-//   const supabase = createMiddlewareClient({ req: request, res });
+export async function middleware(request: NextRequest) {
+  // Ambil token dari NextAuth
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-//   const {
-//     data: { session },
-//   } = await supabase.auth.getSession();
+  // Debug log
+  console.log("[MIDDLEWARE] NextAuth Token:", token);
 
-//   // Allow NextAuth API routes to be public
-//   const isNextAuthRoute = request.nextUrl.pathname.startsWith("/api/auth");
+  // Allow NextAuth API routes
+  if (request.nextUrl.pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
 
-//   if (!session) {
-//     if (
-//       request.nextUrl.pathname.startsWith("/dashboard") ||
-//       (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
-//     ) {
-//       return NextResponse.redirect(new URL("/", request.url));
-//     }
-//     return res;
-//   }
+  // Jika belum login, redirect dari dashboard/api ke home
+  if (!token) {
+    if (request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/api")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
 
-//   const userId = session.user.id;
+  // Jika user admin dan akses home, redirect ke dashboard
+  if (token.role === "admin" && request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
-//   const { data: profile, error } = await supabase
-//     .from("users")
-//     .select("role")
-//     .eq("id", userId)
-//     .single();
+  // Jika bukan admin dan akses dashboard/api, redirect ke home
+  if (token.role !== "admin") {
+    if (request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/api")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
 
-//   if (error || profile?.role !== "admin") {
-//     if (
-//       request.nextUrl.pathname.startsWith("/dashboard") ||
-//       (request.nextUrl.pathname.startsWith("/api") && !isNextAuthRoute)
-//     ) {
-//       return NextResponse.redirect(new URL("/", request.url));
-//     }
-//   }
+  return NextResponse.next();
+}
 
-//   return res;
-// }
+export const config = {
+  matcher: ["/", "/dashboard/:path*", "/api/:path*"],
+};
 
-// export const config = {
-//   matcher: ["/dashboard/:path*", "/api/:path*"],
-// };
-
-export const config = {};
-export default function () {}
+// export const config = {};
+// export default function () {}

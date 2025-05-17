@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { assets } from "@/app/assets/assets";
 
 export default function AuthPage() {
@@ -176,44 +176,18 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
 
-    if (!validateLoginForm()) {
-      return;
-    }
-
+    if (!validateLoginForm()) return;
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email: loginData.email,
         password: loginData.password,
-        redirect: false,
-        callbackUrl,
+        redirect: true,
+        callbackUrl: "/"
       });
-
-      if (result?.error) {
-        setError(result.error);
-        setErrors(prev => ({
-          ...prev,
-          login: {
-            ...prev.login,
-            general: result.error || ""
-          }
-        }));
-      } else if (result?.url) {
-        router.push(result.url);
-      } else {
-        router.push(callbackUrl);
-      }
     } catch (error: any) {
-      console.error("Login error:", error);
-      setError(error?.message || "An error occurred during login");
-      setErrors(prev => ({
-        ...prev,
-        login: {
-          ...prev.login,
-          general: error?.message || "An error occurred during login"
-        }
-      }));
+      setError(error.message || "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
