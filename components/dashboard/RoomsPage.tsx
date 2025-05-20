@@ -332,7 +332,7 @@ export default function RoomList() {
                   </span>
                 </h2>
                 <div className="text-gray-600 text-sm mt-1">
-                  <span className="font-semibold">Price:</span> Rp. {room.price_per_night}
+                  <span className="font-semibold">Price:</span> Rp. {room.price_per_night.toLocaleString("id-ID")}
                   <span className="mx-2">|</span>
                   <span className="font-semibold">Capacity:</span> {room.capacity}
                 </div>

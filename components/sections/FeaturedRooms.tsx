@@ -104,7 +104,7 @@ export function FeaturedRooms() {
                 </CardContent>
                 <CardFooter className="p-4 pt-0 flex justify-between items-center">
                   <div>
-                    <span className="font-bold">Rp. {room.price_per_night}</span>
+                    <span className="font-bold">Rp. {room.price_per_night.toLocaleString("id-ID")}</span>
                     <span className="text-sm text-muted-foreground"> /night</span>
                   </div>
                   <Link href={`/details/${room.id}`}>

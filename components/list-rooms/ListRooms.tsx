@@ -7,9 +7,9 @@ import Link from "next/link";
 
 const popularFilters = ["Single Bed", "Double Bed", "Deluxe", "Vancy"];
 const priceRanges = [
-  "Rp. 100000 to Rp. 299999",
-  "Rp. 300000 to Rp. 499999",
-  "Up to Rp. 500000",
+  "Rp. 100.000 to Rp. 299.999",
+  "Rp. 300.000 to Rp. 499.999",
+  "Up to Rp. 500.000",
 ];
 const sortOptions = ["Price Low to High", "Price High to Low", "Newest First"];
 
@@ -192,7 +192,7 @@ export default function ListRooms() {
                 number={room.room_number}
                 roomType={room.room_type}
                 capacity={room.capacity}
-                price={room.price_per_night}
+                price={room.price_per_night.toLocaleString("id-ID")}
                 image={room.room_images[0]?.image_url ?? "/fallback.jpg"}
                 amenities={room.amenities}
                 isAvailable={room.is_available}

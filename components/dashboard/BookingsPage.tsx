@@ -370,7 +370,7 @@ export default function BookingsPage() {
                     </TableCell>
                     <TableCell>{booking.check_in_date}</TableCell>
                     <TableCell>{booking.check_out_date}</TableCell>
-                    <TableCell>Rp. {booking.total_price}</TableCell>
+                    <TableCell>Rp. {booking.total_price.toLocaleString("id-ID")}</TableCell>
                     <TableCell>
                       <Badge
                         className={

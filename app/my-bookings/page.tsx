@@ -31,6 +31,7 @@ export default function MyBookingsPage() {
     } else if (status === "authenticated" && session?.user) {
       fetchBookings()
     }
+    // eslint-disable-next-line
   }, [status, session, router])
 
   const fetchBookings = async () => {
@@ -212,7 +213,12 @@ export default function MyBookingsPage() {
                 </div>
               ) : (
                 cancelledBookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    deleteLoadingId={deleteLoadingId}
+                    handleDeleteBooking={handleDeleteBooking}
+                  />
                 ))
               )}
             </TabsContent>
@@ -255,7 +261,7 @@ function BookingCard({
             <div className="flex flex-col md:flex-row justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-lg">{booking.room.room_type}</h3>
+                  <h3 className="font-bold text-lg">Room {booking.room.room_number}</h3>
                   <Badge
                     className={
                       booking.status === "pending"
@@ -269,8 +275,7 @@ function BookingCard({
                   </Badge>
                 </div>
                 <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  <span>Room {booking.room.room_number}</span>
+                  <span>{booking.room.room_type}</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
@@ -287,7 +292,7 @@ function BookingCard({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Price per night</p>
-                    <p className="font-medium">Rp. {booking.room.price_per_night}</p>
+                    <p className="font-medium">Rp. {booking.room.price_per_night.toLocaleString("id-ID")}</p>
                   </div>
                 </div>
                 <div>
@@ -315,7 +320,7 @@ function BookingCard({
                         : "bg-gray-100 text-gray-800 hover:bg-gray-100"
                   }
                 >
-                  {booking.status === "confirmed" ? "Confirmed" : booking.status === "pending" ? "Pending" : "Refunded"}
+                  {booking.status === "confirmed" ? "Confirmed" : booking.status === "pending" ? "Pending" : "Cancelled"}
                 </Badge>
               </div>
             </div>
@@ -325,11 +330,6 @@ function BookingCard({
                 <span className="font-medium">{booking.id}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {booking.status === "confirmed" && (
-                  <Button variant="outline" size="sm" className="gap-1 cursor-pointer">
-                    <Download className="h-4 w-4" /> Invoice
-                  </Button>
-                )}
                 {(booking.status === "pending" || booking.status === "cancelled") && handleDeleteBooking && (
                   <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer" disabled={deleteLoadingId === booking.id} onClick={() => handleDeleteBooking(booking.id)}>{deleteLoadingId === booking.id ? "Deleting..." : "Delete"}</Button>
                 )}

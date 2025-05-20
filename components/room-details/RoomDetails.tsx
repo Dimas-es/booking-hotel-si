@@ -258,7 +258,7 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                   Price per night:
                 </span>{" "}
                 <span className="text-black font-semibold">
-                  Rp. {room.price_per_night.toLocaleString()}
+                  Rp. {room.price_per_night.toLocaleString("id-ID")}
                 </span>
               </p>
               <p className="mb-2">
@@ -356,7 +356,7 @@ export default function RoomDetails({ roomId }: { roomId: string }) {
                     <div className="text-sm text-gray-700">
                       Total Price:{" "}
                       <span className="font-semibold text-black">
-                        Rp. {totalPrice.toLocaleString()}
+                        Rp. {totalPrice.toLocaleString("id-ID")}
                       </span>
                     </div>
 

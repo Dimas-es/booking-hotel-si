@@ -181,11 +181,10 @@ export default function BookingDetailPage({
                     </div>
                     <div className="flex-1">
                       <h2 className="text-xl font-bold mb-1">
-                        {booking.room.room_type}
+                        Room {booking.room.room_number}
                       </h2>
                       <div className="flex items-center text-sm text-gray-500 mb-4">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span>Room {booking.room.room_number}</span>
+                        <span>{booking.room.room_type}</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
@@ -224,7 +223,7 @@ export default function BookingDetailPage({
                             Price per night
                           </p>
                           <p className="font-medium">
-                            Rp. {booking.room.price_per_night}
+                            Rp. {booking.room.price_per_night.toLocaleString("id-ID")}
                           </p>
                         </div>
                       </div>
@@ -283,14 +282,14 @@ export default function BookingDetailPage({
                             ? "bg-green-100 text-green-800 hover:bg-green-100"
                             : booking.status === "pending"
                             ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-100"
+                            : "bg-gray-100 text-red-800 hover:bg-red-100"
                         }
                       >
                         {booking.status === "confirmed"
                           ? "Confirmed"
                           : booking.status === "pending"
                           ? "Pending"
-                          : "Refunded"}
+                          : "Cancelled"}
                       </Badge>
                     </div>
                     <div>
@@ -302,12 +301,9 @@ export default function BookingDetailPage({
                     <div className="border-t pt-4">
                       <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                         <p>Total</p>
-                        <p>Rp. {booking.total_price}</p>
+                        <p>Rp. {booking.total_price.toLocaleString("id-ID")}</p>
                       </div>
                     </div>
-                    <Button className="w-full mt-4 gap-1 cursor-pointer">
-                      <Download className="h-4 w-4" /> Download Invoice
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
